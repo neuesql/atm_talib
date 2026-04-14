@@ -14,7 +14,7 @@ A DuckDB extension named `talib` that wraps all 158 TA-Lib (Technical Analysis L
 | Function coverage | All 158 functions |
 | SQL naming | `ta_` prefix, lowercase (e.g. `ta_sma`, `ta_macd`) |
 | Function types | Window functions + scalar/list functions |
-| Build approach | Hybrid: code generation + manual overrides for multi-output |
+| Build approach | Hybrid: C++ X-macros + manual overrides for multi-output |
 | Multi-output returns | DuckDB STRUCT with named fields |
 | Platforms | Linux (x86_64 + aarch64), macOS (x86_64 + arm64). Windows later. |
 | Testing | SQLLogicTest, values validated against Python TA-Lib |
@@ -61,7 +61,7 @@ A DuckDB extension named `talib` that wraps all 158 TA-Lib (Technical Analysis L
 
 Three layers:
 
-1. **Generated Registration Layer** — auto-generated C++ code that registers all 158 functions as both DuckDB window functions and scalar/list functions. Produced by a Python code generator at build time.
+1. **X-Macro Registration Layer** — a header (`talib_functions.hpp`) defines all 158 functions as macro entries. Different macro expansions register window functions, scalar functions, etc. Pure C++, no code generation tools needed.
 2. **Adapter Layer** — hand-written C++ that bridges DuckDB vectors/frames to TA-Lib's array-based C API. Provides 5 templated pattern handlers and STRUCT builders for multi-output functions.
 3. **TA-Lib** — the upstream C library, pulled via CMake FetchContent and statically linked.
 
@@ -181,21 +181,16 @@ atm_talib/
 ├── Makefile                          # DuckDB extension convenience wrapper
 ├── extension_config.cmake            # Extension metadata
 ├── vcpkg.json                        # Empty deps (TA-Lib via FetchContent)
-├── scripts/
-│   └── generate_functions.py         # Code generator: parses ta_func.h → C++
 ├── src/
 │   ├── include/
-│   │   └── talib_extension.hpp       # Extension header
+│   │   ├── talib_extension.hpp       # Extension header
+│   │   ├── talib_functions.hpp       # X-macro table: all 158 function definitions
+│   │   └── talib_adapter.hpp         # Adapter types, templates & helpers
 │   ├── talib_extension.cpp           # Extension entry point (Load)
 │   ├── talib_adapter.cpp             # Adapter: DuckDB vectors ↔ TA-Lib arrays
-│   ├── talib_adapter.hpp             # Adapter types & helpers
-│   ├── generated/
-│   │   ├── window_functions.cpp      # Auto-generated window registrations
-│   │   ├── scalar_functions.cpp      # Auto-generated scalar/list registrations
-│   │   └── function_metadata.hpp     # Auto-generated function name/param tables
-│   └── overrides/
-│       ├── multi_output.cpp          # Hand-written: MACD, BBANDS, STOCH, etc.
-│       └── multi_output.hpp          # STRUCT type definitions for multi-output
+│   ├── talib_window.cpp              # Window function registrations (via X-macro expansion)
+│   ├── talib_scalar.cpp              # Scalar/list function registrations (via X-macro expansion)
+│   └── talib_multi_output.cpp        # Hand-written: MACD, BBANDS, STOCH, etc.
 ├── test/
 │   └── sql/
 │       ├── test_overlap.test         # SMA, EMA, BBANDS, DEMA, TEMA, WMA, etc.
@@ -222,8 +217,9 @@ atm_talib/
 ## Build Flow
 
 1. CMake `FetchContent` pulls TA-Lib source from GitHub and builds as static library
-2. `scripts/generate_functions.py` runs as a CMake custom command, reads `ta_func.h`, outputs `src/generated/*.cpp`
-3. Extension compiles: adapter layer + generated code + overrides → links with static TA-Lib → produces `talib.duckdb_extension`
+2. Extension compiles: adapter layer + X-macro expansions + multi-output overrides → links with static TA-Lib → produces `talib.duckdb_extension`
+
+No Python or external toolchains required. Pure C++ build.
 
 ### TA-Lib integration (CMakeLists.txt)
 
@@ -238,56 +234,100 @@ target_link_libraries(${EXTENSION_NAME} ta_lib)
 target_link_libraries(${LOADABLE_EXTENSION_NAME} ta_lib)
 ```
 
-### Code generator (CMake custom command)
-
-```cmake
-add_custom_command(
-    OUTPUT ${GENERATED_SOURCES}
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/generate_functions.py
-            --header ${ta_lib_SOURCE_DIR}/include/ta_func.h
-            --output ${CMAKE_SOURCE_DIR}/src/generated/
-    DEPENDS ${ta_lib_SOURCE_DIR}/include/ta_func.h
-)
-```
-
 ---
 
-## Code Generator Design
+## X-Macro Design
 
-**Input:** TA-Lib's `ta_func.h` header file.
+Instead of a Python code generator, all 158 functions are defined in a single X-macro header `src/include/talib_functions.hpp`. Each macro entry declares the function's name, TA-Lib C function pointer, input pattern, and return type.
 
-**Process:**
-
-1. Regex-parse each `TA_RetCode TA_XXX(...)` function signature
-2. Extract: function name, input arrays (by name: `inReal`, `inHigh`, `inLow`, `inClose`, `inOpen`, `inVolume`), optional parameters (`optIn*`), output arrays (`out*`)
-3. Classify into pattern P1-P5 based on input parameter names
-4. Detect multi-output functions (>1 `out*` array) → add to skip-list (handled by overrides)
-5. Generate C++ registration code for window and scalar variants
-
-**Generated code delegates to templated adapter functions:**
+### X-macro table (`talib_functions.hpp`)
 
 ```cpp
-// Window function registration (generated)
-registry.AddFunction(WindowFunction(
-    "ta_sma",
-    {LogicalType::DOUBLE, LogicalType::INTEGER},
-    LogicalType::DOUBLE,
-    TalibWindowBind<Pattern::P1>,
-    TalibWindowInit<TA_SMA, Pattern::P1>,
-    TalibWindowUpdate<TA_SMA, Pattern::P1>,
-    TalibWindowFinalize<TA_SMA, Pattern::P1>
-));
+// TALIB_FUNC(sql_name, ta_func, pattern, return_type)
+// Single-output functions only. Multi-output functions are in talib_multi_output.cpp.
 
-// Scalar/list function registration (generated)
-registry.AddFunction(ScalarFunction(
-    "ta_sma",
-    {LogicalType::LIST(LogicalType::DOUBLE), LogicalType::INTEGER},
-    LogicalType::LIST(LogicalType::DOUBLE),
-    TalibScalarExecute<TA_SMA, Pattern::P1>
-));
+// --- Overlap Studies ---
+TALIB_FUNC(sma,     TA_SMA,     P1, DOUBLE)
+TALIB_FUNC(ema,     TA_EMA,     P1, DOUBLE)
+TALIB_FUNC(wma,     TA_WMA,     P1, DOUBLE)
+TALIB_FUNC(dema,    TA_DEMA,    P1, DOUBLE)
+TALIB_FUNC(tema,    TA_TEMA,    P1, DOUBLE)
+TALIB_FUNC(trima,   TA_TRIMA,   P1, DOUBLE)
+TALIB_FUNC(kama,    TA_KAMA,    P1, DOUBLE)
+TALIB_FUNC(t3,      TA_T3,      P1, DOUBLE)
+TALIB_FUNC(ma,      TA_MA,      P1, DOUBLE)   // extra param: matype
+TALIB_FUNC(midpoint,TA_MIDPOINT,P1, DOUBLE)
+TALIB_FUNC(midprice,TA_MIDPRICE,P3, DOUBLE)
+TALIB_FUNC(sar,     TA_SAR,     P3, DOUBLE)
+// ...
+
+// --- Momentum Indicators ---
+TALIB_FUNC(rsi,     TA_RSI,     P1, DOUBLE)
+TALIB_FUNC(willr,   TA_WILLR,   P3, DOUBLE)
+TALIB_FUNC(cci,     TA_CCI,     P3, DOUBLE)
+TALIB_FUNC(adx,     TA_ADX,     P3, DOUBLE)
+// ...
+
+// --- Volume Indicators ---
+TALIB_FUNC(ad,      TA_AD,      P4, DOUBLE)
+TALIB_FUNC(obv,     TA_OBV,     P4, DOUBLE)
+// ...
+
+// --- Pattern Recognition ---
+TALIB_FUNC(cdldoji,    TA_CDLDOJI,    P5, INTEGER)
+TALIB_FUNC(cdlhammer,  TA_CDLHAMMER,  P5, INTEGER)
+// ... all 61 candlestick patterns ...
+
+// --- Math Transform ---
+TALIB_FUNC(sin,     TA_SIN,     P2, DOUBLE)
+TALIB_FUNC(cos,     TA_COS,     P2, DOUBLE)
+TALIB_FUNC(ln,      TA_LN,      P2, DOUBLE)
+// ...
 ```
 
-**Override mechanism:** Functions in `src/overrides/multi_output.cpp` are manually registered and excluded from code generation. These handle STRUCT return types with explicit field names.
+### Expansion for window function registration (`talib_window.cpp`)
+
+```cpp
+#define TALIB_FUNC(sql_name, ta_func, pattern, ret_type) \
+    registry.AddFunction(WindowFunction(                  \
+        "ta_" #sql_name,                                  \
+        PatternArgs<Pattern::pattern>(),                  \
+        LogicalType::ret_type,                            \
+        TalibWindowBind<Pattern::pattern>,                \
+        TalibWindowInit<ta_func, Pattern::pattern>,       \
+        TalibWindowUpdate<ta_func, Pattern::pattern>,     \
+        TalibWindowFinalize<ta_func, Pattern::pattern>    \
+    ));
+
+#include "talib_functions.hpp"
+#undef TALIB_FUNC
+```
+
+### Expansion for scalar/list registration (`talib_scalar.cpp`)
+
+```cpp
+#define TALIB_FUNC(sql_name, ta_func, pattern, ret_type) \
+    registry.AddFunction(ScalarFunction(                  \
+        "ta_" #sql_name,                                  \
+        PatternListArgs<Pattern::pattern>(),               \
+        LogicalType::LIST(LogicalType::ret_type),          \
+        TalibScalarExecute<ta_func, Pattern::pattern>      \
+    ));
+
+#include "talib_functions.hpp"
+#undef TALIB_FUNC
+```
+
+### Multi-output override
+
+Functions with multiple outputs (MACD, BBANDS, STOCH, etc.) are **not** included in `talib_functions.hpp`. They are manually registered in `talib_multi_output.cpp` with explicit STRUCT return types and field names.
+
+### Benefits of X-macro approach
+
+- Pure C++, no external tools or toolchains
+- Adding a new TA-Lib function = one line in `talib_functions.hpp`
+- Compile-time type checking on all registrations
+- Single source of truth for the function catalog
 
 ---
 
@@ -343,7 +383,6 @@ extension:
   description: Technical Analysis Library (TA-Lib) functions for DuckDB
   version: 0.1.0
   language: C++
-  requires_toolchains: python3
   repo: https://github.com/<username>/atm_talib
   ref: main
 ```
