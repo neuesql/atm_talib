@@ -1,0 +1,50 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  duckdb-stable-build:
+    name: Build extension binaries
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@v1.5.1
+    with:
+      duckdb_version: v1.5.2
+      ci_tools_version: v1.5.1
+      extension_name: talib
+      exclude_archs: windows_amd64;windows_amd64_mingw;windows_amd64_rtools;wasm_mvp;wasm_eh;wasm_threads
+
+  release:
+    name: Upload release binaries
+    needs: duckdb-stable-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release directory structure
+        run: |
+          mkdir -p release/v1.5.2
+          for dir in artifacts/talib-*; do
+            arch=$(echo "$dir" | sed 's/.*extension-//')
+            mkdir -p "release/v1.5.2/$arch"
+            cp "$dir"/*.duckdb_extension "release/v1.5.2/$arch/" 2>/dev/null || true
+            # Also gzip for the standard distribution format
+            for f in "release/v1.5.2/$arch"/*.duckdb_extension; do
+              [ -f "$f" ] && gzip -k "$f"
+            done
+          done
+          find release -type f | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/v1.5.2/**/*
+          generate_release_notes: true
