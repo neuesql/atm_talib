@@ -5,12 +5,7 @@ A DuckDB extension that brings [TA-Lib](https://ta-lib.org/) (Technical Analysis
 ## Install
 
 ```sql
--- From community repository (after acceptance)
-INSTALL talib FROM community;
-LOAD talib;
-
--- From custom repository
-INSTALL talib FROM 'https://your-repo-url';
+INSTALL talib FROM 'https://github.com/neuesql/atm_talib';
 LOAD talib;
 ```
 
@@ -103,7 +98,7 @@ SELECT ta_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc
 ## Build from Source
 
 ```bash
-git clone --recurse-submodules https://github.com/<username>/atm_talib.git
+git clone --recurse-submodules https://github.com/neuesql/atm_talib.git
 cd atm_talib
 GEN=ninja make        # build
 make test             # run tests
