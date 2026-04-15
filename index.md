@@ -15,6 +15,149 @@ Candlestick pattern functions return `LIST<INTEGER>` (scalar) or `INTEGER` (wind
 
 ---
 
+## Function Index
+
+| # | Category | Function | Description | Input | Return |
+|---|----------|----------|-------------|-------|--------|
+| | **Overlap Studies** | | | | |
+| 1 | Overlap | `ta_sma` / `taw_sma` | Simple Moving Average | (values, period) | DOUBLE |
+| 2 | Overlap | `ta_ema` / `taw_ema` | Exponential Moving Average | (values, period) | DOUBLE |
+| 3 | Overlap | `ta_wma` / `taw_wma` | Weighted Moving Average | (values, period) | DOUBLE |
+| 4 | Overlap | `ta_dema` / `taw_dema` | Double Exponential Moving Average | (values, period) | DOUBLE |
+| 5 | Overlap | `ta_tema` / `taw_tema` | Triple Exponential Moving Average | (values, period) | DOUBLE |
+| 6 | Overlap | `ta_trima` / `taw_trima` | Triangular Moving Average | (values, period) | DOUBLE |
+| 7 | Overlap | `ta_kama` / `taw_kama` | Kaufman Adaptive Moving Average | (values, period) | DOUBLE |
+| 8 | Overlap | `ta_midpoint` / `taw_midpoint` | MidPoint over period | (values, period) | DOUBLE |
+| 9 | Overlap | `ta_midprice` / `taw_midprice` | Midpoint Price over period | (high, low, period) | DOUBLE |
+| | **Momentum Indicators** | | | | |
+| 10 | Momentum | `ta_rsi` / `taw_rsi` | Relative Strength Index | (values, period) | DOUBLE |
+| 11 | Momentum | `ta_cmo` / `taw_cmo` | Chande Momentum Oscillator | (values, period) | DOUBLE |
+| 12 | Momentum | `ta_mom` / `taw_mom` | Momentum | (values, period) | DOUBLE |
+| 13 | Momentum | `ta_roc` / `taw_roc` | Rate of Change | (values, period) | DOUBLE |
+| 14 | Momentum | `ta_rocp` / `taw_rocp` | Rate of Change (Percentage) | (values, period) | DOUBLE |
+| 15 | Momentum | `ta_rocr` / `taw_rocr` | Rate of Change (Ratio) | (values, period) | DOUBLE |
+| 16 | Momentum | `ta_rocr100` / `taw_rocr100` | Rate of Change (Ratio x100) | (values, period) | DOUBLE |
+| 17 | Momentum | `ta_trix` / `taw_trix` | Triple Smooth EMA Rate of Change | (values, period) | DOUBLE |
+| 18 | Momentum | `ta_willr` / `taw_willr` | Williams' %R | (high, low, close, period) | DOUBLE |
+| 19 | Momentum | `ta_cci` / `taw_cci` | Commodity Channel Index | (high, low, close, period) | DOUBLE |
+| 20 | Momentum | `ta_adx` / `taw_adx` | Average Directional Movement Index | (high, low, close, period) | DOUBLE |
+| 21 | Momentum | `ta_adxr` / `taw_adxr` | Average Directional Movement Rating | (high, low, close, period) | DOUBLE |
+| 22 | Momentum | `ta_dx` / `taw_dx` | Directional Movement Index | (high, low, close, period) | DOUBLE |
+| 23 | Momentum | `ta_plus_di` / `taw_plus_di` | Plus Directional Indicator | (high, low, close, period) | DOUBLE |
+| 24 | Momentum | `ta_minus_di` / `taw_minus_di` | Minus Directional Indicator | (high, low, close, period) | DOUBLE |
+| 25 | Momentum | `ta_plus_dm` / `taw_plus_dm` | Plus Directional Movement | (high, low, period) | DOUBLE |
+| 26 | Momentum | `ta_minus_dm` / `taw_minus_dm` | Minus Directional Movement | (high, low, period) | DOUBLE |
+| | **Volume Indicators** | | | | |
+| 27 | Volume | `ta_ad` / `taw_ad` | Chaikin A/D Line | (high, low, close, volume) | DOUBLE |
+| | **Volatility** | | | | |
+| 28 | Volatility | `ta_atr` / `taw_atr` | Average True Range | (high, low, close, period) | DOUBLE |
+| 29 | Volatility | `ta_natr` / `taw_natr` | Normalized Average True Range | (high, low, close, period) | DOUBLE |
+| 30 | Volatility | `ta_trange` / `taw_trange` | True Range | (high, low, close) | DOUBLE |
+| | **Pattern Recognition** | | | | |
+| 31 | Pattern | `ta_cdl2crows` | Two Crows | (open, high, low, close) | INT |
+| 32 | Pattern | `ta_cdl3blackcrows` | Three Black Crows | (open, high, low, close) | INT |
+| 33 | Pattern | `ta_cdl3inside` | Three Inside Up/Down | (open, high, low, close) | INT |
+| 34 | Pattern | `ta_cdl3linestrike` | Three-Line Strike | (open, high, low, close) | INT |
+| 35 | Pattern | `ta_cdl3outside` | Three Outside Up/Down | (open, high, low, close) | INT |
+| 36 | Pattern | `ta_cdl3starsinsouth` | Three Stars In The South | (open, high, low, close) | INT |
+| 37 | Pattern | `ta_cdl3whitesoldiers` | Three Advancing White Soldiers | (open, high, low, close) | INT |
+| 38 | Pattern | `ta_cdladvanceblock` | Advance Block | (open, high, low, close) | INT |
+| 39 | Pattern | `ta_cdlbelthold` | Belt-hold | (open, high, low, close) | INT |
+| 40 | Pattern | `ta_cdlbreakaway` | Breakaway | (open, high, low, close) | INT |
+| 41 | Pattern | `ta_cdlclosingmarubozu` | Closing Marubozu | (open, high, low, close) | INT |
+| 42 | Pattern | `ta_cdlconcealbabyswall` | Concealing Baby Swallow | (open, high, low, close) | INT |
+| 43 | Pattern | `ta_cdlcounterattack` | Counterattack | (open, high, low, close) | INT |
+| 44 | Pattern | `ta_cdldoji` | Doji | (open, high, low, close) | INT |
+| 45 | Pattern | `ta_cdldojistar` | Doji Star | (open, high, low, close) | INT |
+| 46 | Pattern | `ta_cdldragonflydoji` | Dragonfly Doji | (open, high, low, close) | INT |
+| 47 | Pattern | `ta_cdlengulfing` | Engulfing Pattern | (open, high, low, close) | INT |
+| 48 | Pattern | `ta_cdlgapsidesidewhite` | Gap Side-by-Side White Lines | (open, high, low, close) | INT |
+| 49 | Pattern | `ta_cdlgravestonedoji` | Gravestone Doji | (open, high, low, close) | INT |
+| 50 | Pattern | `ta_cdlhammer` | Hammer | (open, high, low, close) | INT |
+| 51 | Pattern | `ta_cdlhangingman` | Hanging Man | (open, high, low, close) | INT |
+| 52 | Pattern | `ta_cdlharami` | Harami Pattern | (open, high, low, close) | INT |
+| 53 | Pattern | `ta_cdlharamicross` | Harami Cross Pattern | (open, high, low, close) | INT |
+| 54 | Pattern | `ta_cdlhighwave` | High-Wave Candle | (open, high, low, close) | INT |
+| 55 | Pattern | `ta_cdlhikkake` | Hikkake Pattern | (open, high, low, close) | INT |
+| 56 | Pattern | `ta_cdlhikkakemod` | Modified Hikkake Pattern | (open, high, low, close) | INT |
+| 57 | Pattern | `ta_cdlhomingpigeon` | Homing Pigeon | (open, high, low, close) | INT |
+| 58 | Pattern | `ta_cdlidentical3crows` | Identical Three Crows | (open, high, low, close) | INT |
+| 59 | Pattern | `ta_cdlinneck` | In-Neck Pattern | (open, high, low, close) | INT |
+| 60 | Pattern | `ta_cdlinvertedhammer` | Inverted Hammer | (open, high, low, close) | INT |
+| 61 | Pattern | `ta_cdlkicking` | Kicking | (open, high, low, close) | INT |
+| 62 | Pattern | `ta_cdlkickingbylength` | Kicking (by longer marubozu) | (open, high, low, close) | INT |
+| 63 | Pattern | `ta_cdlladderbottom` | Ladder Bottom | (open, high, low, close) | INT |
+| 64 | Pattern | `ta_cdllongleggeddoji` | Long Legged Doji | (open, high, low, close) | INT |
+| 65 | Pattern | `ta_cdllongline` | Long Line Candle | (open, high, low, close) | INT |
+| 66 | Pattern | `ta_cdlmarubozu` | Marubozu | (open, high, low, close) | INT |
+| 67 | Pattern | `ta_cdlmatchinglow` | Matching Low | (open, high, low, close) | INT |
+| 68 | Pattern | `ta_cdlonneck` | On-Neck Pattern | (open, high, low, close) | INT |
+| 69 | Pattern | `ta_cdlpiercing` | Piercing Pattern | (open, high, low, close) | INT |
+| 70 | Pattern | `ta_cdlrickshawman` | Rickshaw Man | (open, high, low, close) | INT |
+| 71 | Pattern | `ta_cdlrisefall3methods` | Rising/Falling Three Methods | (open, high, low, close) | INT |
+| 72 | Pattern | `ta_cdlseparatinglines` | Separating Lines | (open, high, low, close) | INT |
+| 73 | Pattern | `ta_cdlshootingstar` | Shooting Star | (open, high, low, close) | INT |
+| 74 | Pattern | `ta_cdlshortline` | Short Line Candle | (open, high, low, close) | INT |
+| 75 | Pattern | `ta_cdlspinningtop` | Spinning Top | (open, high, low, close) | INT |
+| 76 | Pattern | `ta_cdlstalledpattern` | Stalled Pattern | (open, high, low, close) | INT |
+| 77 | Pattern | `ta_cdlsticksandwich` | Stick Sandwich | (open, high, low, close) | INT |
+| 78 | Pattern | `ta_cdltakuri` | Takuri (long lower shadow Doji) | (open, high, low, close) | INT |
+| 79 | Pattern | `ta_cdltasukigap` | Tasuki Gap | (open, high, low, close) | INT |
+| 80 | Pattern | `ta_cdlthrusting` | Thrusting Pattern | (open, high, low, close) | INT |
+| 81 | Pattern | `ta_cdltristar` | Tristar Pattern | (open, high, low, close) | INT |
+| 82 | Pattern | `ta_cdlunique3river` | Unique 3 River | (open, high, low, close) | INT |
+| 83 | Pattern | `ta_cdlupsidegap2crows` | Upside Gap Two Crows | (open, high, low, close) | INT |
+| 84 | Pattern | `ta_cdlxsidegap3methods` | Upside/Downside Gap Three Methods | (open, high, low, close) | INT |
+| | **Price Transform** | | | | |
+| 85 | Price | `ta_avgprice` / `taw_avgprice` | Average Price (O+H+L+C)/4 | (open, high, low, close) | DOUBLE |
+| 86 | Price | `ta_bop` / `taw_bop` | Balance of Power | (open, high, low, close) | DOUBLE |
+| 87 | Price | `ta_medprice` / `taw_medprice` | Median Price (H+L)/2 | (high, low) | DOUBLE |
+| 88 | Price | `ta_typprice` / `taw_typprice` | Typical Price (H+L+C)/3 | (high, low, close) | DOUBLE |
+| 89 | Price | `ta_wclprice` / `taw_wclprice` | Weighted Close (H+L+2C)/4 | (high, low, close) | DOUBLE |
+| | **Cycle Indicators** | | | | |
+| 90 | Cycle | `ta_ht_dcperiod` / `taw_ht_dcperiod` | Dominant Cycle Period | (values) | DOUBLE |
+| 91 | Cycle | `ta_ht_dcphase` / `taw_ht_dcphase` | Dominant Cycle Phase | (values) | DOUBLE |
+| 92 | Cycle | `ta_ht_trendline` / `taw_ht_trendline` | Instantaneous Trendline | (values) | DOUBLE |
+| 93 | Cycle | `ta_ht_trendmode` / `taw_ht_trendmode` | Trend vs Cycle Mode | (values) | INT |
+| | **Statistics** | | | | |
+| 94 | Stats | `ta_linearreg` / `taw_linearreg` | Linear Regression | (values, period) | DOUBLE |
+| 95 | Stats | `ta_linearreg_angle` / `taw_linearreg_angle` | Linear Regression Angle | (values, period) | DOUBLE |
+| 96 | Stats | `ta_linearreg_intercept` / `taw_linearreg_intercept` | Linear Regression Intercept | (values, period) | DOUBLE |
+| 97 | Stats | `ta_linearreg_slope` / `taw_linearreg_slope` | Linear Regression Slope | (values, period) | DOUBLE |
+| 98 | Stats | `ta_tsf` / `taw_tsf` | Time Series Forecast | (values, period) | DOUBLE |
+| 99 | Stats | `ta_sum` / `taw_sum` | Summation | (values, period) | DOUBLE |
+| 100 | Stats | `ta_max` / `taw_max` | Highest Value over period | (values, period) | DOUBLE |
+| 101 | Stats | `ta_min` / `taw_min` | Lowest Value over period | (values, period) | DOUBLE |
+| 102 | Stats | `ta_maxindex` / `taw_maxindex` | Index of Highest Value | (values, period) | INT |
+| 103 | Stats | `ta_minindex` / `taw_minindex` | Index of Lowest Value | (values, period) | INT |
+| | **Math Transform** | | | | |
+| 104 | Math | `ta_acos` | Arc Cosine | (values) | DOUBLE |
+| 105 | Math | `ta_asin` | Arc Sine | (values) | DOUBLE |
+| 106 | Math | `ta_atan` | Arc Tangent | (values) | DOUBLE |
+| 107 | Math | `ta_ceil` | Ceiling | (values) | DOUBLE |
+| 108 | Math | `ta_cos` | Cosine | (values) | DOUBLE |
+| 109 | Math | `ta_cosh` | Hyperbolic Cosine | (values) | DOUBLE |
+| 110 | Math | `ta_exp` | Exponential (e^x) | (values) | DOUBLE |
+| 111 | Math | `ta_floor` | Floor | (values) | DOUBLE |
+| 112 | Math | `ta_ln` | Natural Logarithm | (values) | DOUBLE |
+| 113 | Math | `ta_log10` | Base-10 Logarithm | (values) | DOUBLE |
+| 114 | Math | `ta_sin` | Sine | (values) | DOUBLE |
+| 115 | Math | `ta_sinh` | Hyperbolic Sine | (values) | DOUBLE |
+| 116 | Math | `ta_sqrt` | Square Root | (values) | DOUBLE |
+| 117 | Math | `ta_tan` | Tangent | (values) | DOUBLE |
+| 118 | Math | `ta_tanh` | Hyperbolic Tangent | (values) | DOUBLE |
+| | **Multi-Output** (scalar only, return `LIST<STRUCT>`) | | | | |
+| 119 | Multi | `ta_macd` | MACD | (values, fast, slow, signal) | STRUCT(macd, signal, hist) |
+| 120 | Multi | `ta_bbands` | Bollinger Bands | (values, period, devup, devdn, matype) | STRUCT(upper, middle, lower) |
+| 121 | Multi | `ta_stoch` | Stochastic | (high, low, close, fastK, slowK, slowKMA, slowD, slowDMA) | STRUCT(slowk, slowd) |
+| 122 | Multi | `ta_aroon` | Aroon | (high, low, period) | STRUCT(aroon_down, aroon_up) |
+| 123 | Multi | `ta_minmax` | Min/Max over period | (values, period) | STRUCT(min, max) |
+| 124 | Multi | `ta_mama` | MESA Adaptive Moving Average | (values, fastlimit, slowlimit) | STRUCT(mama, fama) |
+| 125 | Multi | `ta_ht_phasor` | Hilbert Transform — Phasor | (values) | STRUCT(inphase, quadrature) |
+| 126 | Multi | `ta_ht_sine` | Hilbert Transform — SineWave | (values) | STRUCT(sine, leadsine) |
+
+---
+
 ## 1. Overlap Studies
 
 Moving averages and price-envelope indicators.
