@@ -22,6 +22,7 @@ set(EXTENSION_SOURCES
     src/talib_adapter.cpp
     src/talib_scalar.cpp
     src/talib_aggregate.cpp
+    src/talib_multi_output.cpp
 )
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})

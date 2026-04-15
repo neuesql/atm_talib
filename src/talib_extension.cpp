@@ -10,10 +10,13 @@ namespace duckdb {
 void RegisterTalibScalarFunctions(ExtensionLoader &loader);
 // Defined in talib_aggregate.cpp
 void RegisterTalibAggregateFunctions(ExtensionLoader &loader);
+// Defined in talib_multi_output.cpp
+void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader);
 
 static void LoadInternal(ExtensionLoader &loader) {
     RegisterTalibScalarFunctions(loader);
     RegisterTalibAggregateFunctions(loader);
+    RegisterTalibMultiOutputFunctions(loader);
 }
 
 void TalibExtension::Load(ExtensionLoader &loader) {
