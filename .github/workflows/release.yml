@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to GitHub Pages
+    name: Deploy binaries
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment:
@@ -31,12 +31,10 @@ jobs:
           run-id: ${{ github.event.workflow_run.id || github.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: List downloaded artifacts
-        run: find artifacts -type f | sort
-
-      - name: Create directory structure for DuckDB
+      - name: Create directory structure
         run: |
           mkdir -p site/v1.5.2
+          mkdir -p release_assets
           for dir in artifacts/talib-*; do
             [ -d "$dir" ] || continue
             arch=$(echo "$dir" | sed 's/.*extension-//')
@@ -44,11 +42,16 @@ jobs:
             for f in "$dir"/*.duckdb_extension; do
               [ -f "$f" ] || continue
               cp "$f" "site/v1.5.2/$arch/"
+              # Copy for GitHub Release with arch in filename
+              cp "$f" "release_assets/talib-${arch}.duckdb_extension"
             done
           done
-          echo "Directory structure:"
+          echo "=== GitHub Pages structure ==="
           find site -type f | sort
+          echo "=== Release assets ==="
+          find release_assets -type f | sort
 
+      # Deploy to GitHub Pages (for INSTALL FROM)
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
@@ -60,3 +63,25 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Create GitHub Release (for visibility and manual download)
+      - name: Create or update GitHub Release v1.5.2
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.5.2
+          name: "DuckDB TA-Lib Extension (DuckDB v1.5.2)"
+          body: |
+            ## Install
+
+            ```sql
+            INSTALL talib FROM 'https://neuesql.github.io/atm_talib';
+            LOAD talib;
+            ```
+
+            ## Platforms
+            - Linux x86_64 (`linux_amd64`)
+            - Linux ARM64 (`linux_arm64`)
+            - macOS x86_64 (`osx_amd64`)
+            - macOS ARM64 (`osx_arm64`)
+          files: release_assets/*
+          make_latest: true
