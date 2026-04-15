@@ -1,0 +1,106 @@
+# name: test/sql/test_overlap.test
+# description: Test TA-Lib aggregate functions with OVER() window clauses
+# group: [talib]
+
+require talib
+
+statement ok
+CREATE TABLE ohlc AS
+SELECT * FROM (VALUES
+    ('2024-01-01'::DATE, 'NVDA', 100.0, 105.0, 95.0, 102.0, 1000000.0),
+    ('2024-01-02'::DATE, 'NVDA', 102.0, 108.0, 101.0, 107.0, 1200000.0),
+    ('2024-01-03'::DATE, 'NVDA', 107.0, 110.0, 104.0, 106.0, 900000.0),
+    ('2024-01-04'::DATE, 'NVDA', 106.0, 112.0, 105.0, 111.0, 1100000.0),
+    ('2024-01-05'::DATE, 'NVDA', 111.0, 115.0, 109.0, 113.0, 1300000.0),
+    ('2024-01-08'::DATE, 'NVDA', 113.0, 116.0, 110.0, 114.0, 1050000.0),
+    ('2024-01-09'::DATE, 'NVDA', 114.0, 118.0, 112.0, 117.0, 1400000.0),
+    ('2024-01-10'::DATE, 'NVDA', 117.0, 120.0, 115.0, 119.0, 1250000.0)
+) AS t(date, ticker, open, high, low, close, volume);
+
+# SMA as plain aggregate (should return mean of all close values)
+query R
+SELECT round(taw_sma(close, 8), 2) FROM ohlc;
+----
+111.13
+
+# SMA window function with period=3
+query R
+SELECT round(taw_sma(close, 3) OVER (
+    ORDER BY date
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+), 2) FROM ohlc;
+----
+NULL
+NULL
+105.0
+108.0
+110.0
+112.67
+114.67
+116.67
+
+# EMA window function with period=3
+# With ROWS BETWEEN 2 PRECEDING AND CURRENT ROW, EMA(3) only gets 3 values per window.
+# TA-Lib EMA with period=3 on 3 values outputs 1 value (the SMA of the first period).
+query R
+SELECT round(taw_ema(close, 3) OVER (
+    ORDER BY date
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+), 2) FROM ohlc;
+----
+NULL
+NULL
+105.0
+108.0
+110.0
+112.67
+114.67
+116.67
+
+# Test medprice (P6) as window function
+query R
+SELECT round(taw_medprice(high, low) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlc;
+----
+100.0
+104.5
+107.0
+108.5
+112.0
+113.0
+115.0
+117.5
+
+# Test typprice (P7) as window function
+query R
+SELECT round(taw_typprice(high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlc;
+----
+100.67
+105.33
+106.67
+109.33
+112.33
+113.33
+115.67
+118.0
+
+# Test avgprice (P5) as window function
+query R
+SELECT round(taw_avgprice(open, high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlc;
+----
+100.5
+104.5
+106.75
+108.5
+112.0
+113.25
+115.25
+117.75
