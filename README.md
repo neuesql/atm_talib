@@ -5,7 +5,7 @@ A DuckDB extension that brings [TA-Lib](https://ta-lib.org/) (Technical Analysis
 ## Install
 
 ```sql
-INSTALL talib FROM 'https://github.com/neuesql/atm_talib';
+INSTALL talib FROM 'https://neuesql.github.io/atm_talib';
 LOAD talib;
 ```
 
