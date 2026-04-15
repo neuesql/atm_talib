@@ -1,7 +1,28 @@
 extension:
   name: talib
-  description: Technical Analysis Library (TA-Lib) functions for DuckDB — 100+ indicators for financial market analysis
+  description: "Technical Analysis Library (TA-Lib) functions for DuckDB -- 100+ indicators for financial market analysis"
   version: 0.1.0
   language: C++
-  repo: https://github.com/qunfei/atm_talib
-  ref: main
+  build: cmake
+  license: MIT
+  maintainers:
+    - neuesql
+  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw"
+
+repo:
+  github: neuesql/atm_talib
+  ref: f58fb7d8dc151292270040434257ae8b0b4a84d7
+
+docs:
+  hello_world: |
+    -- Moving averages and RSI on financial data
+    SELECT ta_sma([1.0, 2.0, 3.0, 4.0, 5.0], 3);
+  extended_description: |
+    100+ TA-Lib technical analysis indicators as native DuckDB functions.
+    Includes momentum (RSI, MACD, Stochastic), overlap studies (SMA, EMA, BBANDS),
+    volatility (ATR, NATR), 49 candlestick pattern recognizers, volume indicators,
+    cycle indicators, and math/statistics functions.
+
+    Functions are available in two modes:
+    - Scalar (ta_* prefix): operate on pre-collected lists
+    - Window/Aggregate (taw_* prefix): use OVER() for row-by-row computation
