@@ -113,8 +113,8 @@ Requires: CMake 3.5+, C++17 compiler, ninja (recommended).
 
 ## Documentation
 
-- [Function Reference](docs/index.md) — all functions with parameters and types
-- [SQL Cookbook](docs/cookbook.md) — examples for every function
+- [Function Reference](index.md) — all functions with parameters and types
+- [SQL Cookbook](cookbook.md) — examples for every function
 
 ## License
 
