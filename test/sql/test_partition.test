@@ -1,0 +1,32 @@
+# name: test/sql/test_partition.test
+# description: Test that window functions compute independently per partition
+# group: [talib]
+
+require talib
+
+statement ok
+CREATE TABLE multi_ticker AS
+SELECT * FROM (VALUES
+    ('2024-01-01'::DATE, 'AAPL', 180.0),
+    ('2024-01-02'::DATE, 'AAPL', 182.0),
+    ('2024-01-03'::DATE, 'AAPL', 181.0),
+    ('2024-01-01'::DATE, 'NVDA', 500.0),
+    ('2024-01-02'::DATE, 'NVDA', 510.0),
+    ('2024-01-03'::DATE, 'NVDA', 505.0)
+) AS t(date, ticker, close);
+
+# SMA with PARTITION BY
+query TR
+SELECT ticker, round(taw_sma(close, 2) OVER (
+    PARTITION BY ticker ORDER BY date
+    ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+), 2)
+FROM multi_ticker
+ORDER BY ticker, date;
+----
+AAPL	NULL
+AAPL	181.0
+AAPL	181.5
+NVDA	NULL
+NVDA	505.0
+NVDA	507.5
