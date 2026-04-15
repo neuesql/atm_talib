@@ -6,8 +6,11 @@
 
 namespace duckdb {
 
+// Defined in talib_scalar.cpp
+void RegisterTalibScalarFunctions(ExtensionLoader &loader);
+
 static void LoadInternal(ExtensionLoader &loader) {
-    // Functions will be registered here in later tasks
+    RegisterTalibScalarFunctions(loader);
 }
 
 void TalibExtension::Load(ExtensionLoader &loader) {
