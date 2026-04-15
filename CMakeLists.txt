@@ -19,6 +19,7 @@ include_directories(${ta_lib_SOURCE_DIR}/include)
 
 set(EXTENSION_SOURCES
     src/talib_extension.cpp
+    src/talib_adapter.cpp
 )
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
