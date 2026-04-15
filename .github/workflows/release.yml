@@ -1,50 +1,62 @@
-name: Release
+name: Deploy Extension Binaries
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["Main Extension Distribution Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  duckdb-stable-build:
-    name: Build extension binaries
-    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@v1.5.1
-    with:
-      duckdb_version: v1.5.2
-      ci_tools_version: v1.5.1
-      extension_name: talib
-      exclude_archs: windows_amd64;windows_amd64_mingw;windows_amd64_rtools;wasm_mvp;wasm_eh;wasm_threads
-
-  release:
-    name: Upload release binaries
-    needs: duckdb-stable-build
+  deploy:
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
+      - name: Download artifacts from build workflow
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          run-id: ${{ github.event.workflow_run.id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release directory structure
+      - name: List downloaded artifacts
+        run: find artifacts -type f | sort
+
+      - name: Create directory structure for DuckDB
         run: |
-          mkdir -p release/v1.5.2
+          mkdir -p site/v1.5.2
           for dir in artifacts/talib-*; do
+            [ -d "$dir" ] || continue
             arch=$(echo "$dir" | sed 's/.*extension-//')
-            mkdir -p "release/v1.5.2/$arch"
-            cp "$dir"/*.duckdb_extension "release/v1.5.2/$arch/" 2>/dev/null || true
-            # Also gzip for the standard distribution format
-            for f in "release/v1.5.2/$arch"/*.duckdb_extension; do
-              [ -f "$f" ] && gzip -k "$f"
+            mkdir -p "site/v1.5.2/$arch"
+            for f in "$dir"/*.duckdb_extension; do
+              [ -f "$f" ] || continue
+              cp "$f" "site/v1.5.2/$arch/"
             done
           done
-          find release -type f | sort
+          echo "Directory structure:"
+          find site -type f | sort
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          files: release/v1.5.2/**/*
-          generate_release_notes: true
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
