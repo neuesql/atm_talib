@@ -1,0 +1,112 @@
+# name: test/sql/test_volume.test
+# description: Tests for volume indicators (AD) — pattern P4
+# group: [talib]
+
+require talib
+
+statement ok
+CREATE TABLE ohlcv AS
+SELECT * FROM (VALUES
+    ('2024-01-01'::DATE, 100.0, 105.0, 95.0,  102.0, 1000000.0),
+    ('2024-01-02'::DATE, 102.0, 108.0, 101.0, 107.0, 1200000.0),
+    ('2024-01-03'::DATE, 107.0, 110.0, 104.0, 106.0, 900000.0),
+    ('2024-01-04'::DATE, 106.0, 112.0, 105.0, 111.0, 1100000.0),
+    ('2024-01-05'::DATE, 111.0, 115.0, 109.0, 113.0, 1300000.0),
+    ('2024-01-08'::DATE, 113.0, 116.0, 110.0, 114.0, 1050000.0),
+    ('2024-01-09'::DATE, 114.0, 118.0, 112.0, 117.0, 1400000.0),
+    ('2024-01-10'::DATE, 117.0, 120.0, 115.0, 119.0, 1250000.0)
+) AS t(date, open, high, low, close, volume);
+
+# -------------------------------------------------------
+# AD — P4 pattern: (LIST<DOUBLE> x4) -> LIST<DOUBLE>
+# Accumulation/Distribution Line: uses (2*close - low - high)/(high - low) * volume
+# -------------------------------------------------------
+
+# AD scalar: output length matches input length (no lookback)
+query I
+SELECT length(ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+));
+----
+3
+
+# AD scalar: no NULL values (AD has zero lookback)
+query I
+SELECT ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+)[1] IS NOT NULL;
+----
+true
+
+# AD scalar: verify first value
+# CLV = (2*102 - 95 - 105) / (105 - 95) = (204 - 200) / 10 = 0.4
+# AD[1] = 0.4 * 1000000 = 400000
+query R
+SELECT ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+)[1];
+----
+400000.0
+
+# AD scalar: cumulative values grow when CLV is positive
+query I
+SELECT ta_ad(
+    [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0, 120.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0, 115.0],
+    [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0],
+    [1000000.0, 1200000.0, 900000.0, 1100000.0, 1300000.0, 1050000.0, 1400000.0, 1250000.0]
+)[8] > ta_ad(
+    [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0, 120.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0, 115.0],
+    [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0],
+    [1000000.0, 1200000.0, 900000.0, 1100000.0, 1300000.0, 1050000.0, 1400000.0, 1250000.0]
+)[1];
+----
+true
+
+# AD plain aggregate: returns the last AD value over all rows
+query R
+SELECT round(taw_ad(high, low, close, volume), 2) FROM ohlcv;
+----
+4209523.81
+
+# AD window function: expanding window accumulates AD from row 1
+query R
+SELECT round(taw_ad(high, low, close, volume) OVER (
+    ORDER BY date
+    ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+), 2) FROM ohlcv;
+----
+400000.0
+1257142.86
+957142.86
+1742857.14
+2176190.48
+2526190.48
+3459523.81
+4209523.81
+
+# AD window function: single-row window just gives each bar's own AD contribution
+query I
+SELECT taw_ad(high, low, close, volume) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+) IS NOT NULL FROM ohlcv;
+----
+true
+true
+true
+true
+true
+true
+true
+true

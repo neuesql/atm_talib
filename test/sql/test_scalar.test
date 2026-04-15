@@ -1,0 +1,379 @@
+# name: test/sql/test_scalar.test
+# description: Tests for scalar (ta_) and window (taw_) variants across multiple patterns (P3-P8)
+# group: [talib]
+
+require talib
+
+statement ok
+CREATE TABLE ohlcv AS
+SELECT * FROM (VALUES
+    ('2024-01-01'::DATE, 100.0, 105.0, 95.0,  102.0, 1000000.0),
+    ('2024-01-02'::DATE, 102.0, 108.0, 101.0, 107.0, 1200000.0),
+    ('2024-01-03'::DATE, 107.0, 110.0, 104.0, 106.0, 900000.0),
+    ('2024-01-04'::DATE, 106.0, 112.0, 105.0, 111.0, 1100000.0),
+    ('2024-01-05'::DATE, 111.0, 115.0, 109.0, 113.0, 1300000.0)
+) AS t(date, open, high, low, close, volume);
+
+# ============================================================
+# P3: (LIST<DOUBLE> x3, INTEGER) -> LIST<DOUBLE>
+# Functions: ATR, WILLR, CCI
+# ============================================================
+
+# ATR scalar: correct output length
+query I
+SELECT length(ta_atr(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    [102.0, 107.0, 106.0, 111.0, 113.0],
+    3
+));
+----
+5
+
+# ATR scalar: first (period) elements are NULL
+query I
+SELECT ta_atr(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    [102.0, 107.0, 106.0, 111.0, 113.0],
+    3
+)[3] IS NULL;
+----
+true
+
+# ATR scalar: (period+1)-th element is computed
+query R
+SELECT round(ta_atr(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    [102.0, 107.0, 106.0, 111.0, 113.0],
+    3
+)[4], 4);
+----
+8.3333
+
+# ATR window function: period=3, window=5
+query R
+SELECT round(taw_atr(high, low, close, 3) OVER (
+    ORDER BY date
+    ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
+), 4) FROM ohlcv;
+----
+NULL
+NULL
+NULL
+6.6667
+6.4444
+
+# ATR plain aggregate: returns last ATR value over all rows
+query R
+SELECT round(taw_atr(high, low, close, 3), 4) FROM ohlcv;
+----
+6.4444
+
+# ============================================================
+# P4: (LIST<DOUBLE> x4) -> LIST<DOUBLE>
+# Functions: AD
+# ============================================================
+
+# AD scalar: output length equals input length (zero lookback)
+query I
+SELECT length(ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+));
+----
+3
+
+# AD scalar: no NULL values
+query I
+SELECT ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+)[1] IS NOT NULL;
+----
+true
+
+# AD scalar: first element calculation
+# CLV = (2*102 - 95 - 105) / (105 - 95) = 4/10 = 0.4 → AD = 0.4 * 1000000
+query R
+SELECT ta_ad(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0],
+    [1000000.0, 1200000.0, 900000.0]
+)[1];
+----
+400000.0
+
+# AD window function: expanding window
+query R
+SELECT round(taw_ad(high, low, close, volume) OVER (
+    ORDER BY date
+    ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
+), 2) FROM ohlcv;
+----
+400000.0
+1257142.86
+957142.86
+1742857.14
+2176190.48
+
+# ============================================================
+# P5 DOUBLE: (LIST<DOUBLE> x4) -> LIST<DOUBLE>
+# Functions: AVGPRICE, BOP
+# ============================================================
+
+# AVGPRICE scalar: no lookback, all values computed
+query I
+SELECT ta_avgprice(
+    [100.0, 102.0, 107.0],
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+)[1] IS NOT NULL;
+----
+true
+
+# AVGPRICE scalar: (open + high + low + close) / 4
+query R
+SELECT ta_avgprice(
+    [100.0, 102.0, 107.0],
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+)[1];
+----
+100.5
+
+query R
+SELECT ta_avgprice(
+    [100.0, 102.0, 107.0],
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+);
+----
+[100.5, 104.25, 106.0]
+
+# AVGPRICE window function: single-row window gives each bar's average price
+query R
+SELECT round(taw_avgprice(open, high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlcv;
+----
+100.5
+104.5
+106.75
+108.5
+112.0
+
+# AVGPRICE plain aggregate: returns the last AVGPRICE value
+query R
+SELECT round(taw_avgprice(open, high, low, close), 2) FROM ohlcv;
+----
+112.0
+
+# ============================================================
+# P5 INT: (LIST<DOUBLE> x4) -> LIST<INTEGER>
+# Functions: CDLDOJI (and other CDL patterns)
+# ============================================================
+
+# CDLDOJI scalar: doji candles (open == close) all detected
+query I
+SELECT ta_cdldoji(
+    [100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.0]
+);
+----
+[100, 100, 100]
+
+# CDLDOJI window function: per-row doji check
+query I
+SELECT taw_cdldoji(open, high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+) FROM ohlcv;
+----
+0
+0
+0
+0
+0
+
+# ============================================================
+# P6: (LIST<DOUBLE> x2) -> LIST<DOUBLE>
+# Functions: MEDPRICE
+# ============================================================
+
+# MEDPRICE scalar: no lookback, all values computed
+query R
+SELECT ta_medprice(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0]
+);
+----
+[100.0, 104.0, 105.5]
+
+# MEDPRICE window function: single-row window gives each bar's midpoint
+query R
+SELECT round(taw_medprice(high, low) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlcv;
+----
+100.0
+104.5
+107.0
+108.5
+112.0
+
+# ============================================================
+# P7: (LIST<DOUBLE> x3) -> LIST<DOUBLE>
+# Functions: TRANGE, TYPPRICE, WCLPRICE
+# ============================================================
+
+# TRANGE scalar: first element is NULL (1-bar lookback)
+query I
+SELECT ta_trange(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+)[1] IS NULL;
+----
+true
+
+# TRANGE scalar: subsequent values are the true range
+query R
+SELECT ta_trange(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+)[2];
+----
+8.0
+
+# TRANGE window function: 2-row window returns last bar's true range
+query R
+SELECT round(taw_trange(high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+), 4) FROM ohlcv;
+----
+NULL
+7.0
+6.0
+7.0
+6.0
+
+# TYPPRICE scalar: no lookback, all values computed
+query R
+SELECT round(ta_typprice(
+    [105.0, 108.0, 110.0],
+    [95.0,  100.0, 101.0],
+    [102.0, 107.0, 106.0]
+)[1], 4);
+----
+100.6667
+
+# TYPPRICE window function: single-row window
+query R
+SELECT round(taw_typprice(high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+), 2) FROM ohlcv;
+----
+100.67
+105.33
+106.67
+109.33
+112.33
+
+# ============================================================
+# P8: (LIST<DOUBLE> x2, INTEGER) -> LIST<DOUBLE>
+# Functions: MIDPRICE, PLUS_DM, MINUS_DM
+# ============================================================
+
+# MIDPRICE scalar: correct output length
+query I
+SELECT length(ta_midprice(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+));
+----
+5
+
+# MIDPRICE scalar: first (period-1) elements are NULL
+query I
+SELECT ta_midprice(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+)[2] IS NULL;
+----
+true
+
+# MIDPRICE scalar: values are average of high/low max/min over the period
+query R
+SELECT ta_midprice(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+)[3];
+----
+102.5
+
+# MIDPRICE plain aggregate: returns last MIDPRICE value
+query R
+SELECT round(taw_midprice(high, low, 3), 4) FROM ohlcv;
+----
+109.5
+
+# MIDPRICE window function: period=3, window=3
+query R
+SELECT round(taw_midprice(high, low, 3) OVER (
+    ORDER BY date
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+), 4) FROM ohlcv;
+----
+NULL
+NULL
+102.5
+106.5
+109.5
+
+# PLUS_DM scalar: directional movement values
+query I
+SELECT length(ta_plus_dm(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+));
+----
+5
+
+query I
+SELECT ta_plus_dm(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+)[2] IS NULL;
+----
+true
+
+query R
+SELECT round(ta_plus_dm(
+    [105.0, 108.0, 110.0, 112.0, 115.0],
+    [95.0,  100.0, 101.0, 104.0, 109.0],
+    3
+)[3], 4);
+----
+5.0

@@ -1,0 +1,210 @@
+# name: test/sql/test_pattern.test
+# description: Tests for candlestick pattern recognition (CDLDOJI, CDLHAMMER) — pattern P5 INT
+# group: [talib]
+
+require talib
+
+statement ok
+CREATE TABLE ohlc AS
+SELECT * FROM (VALUES
+    ('2024-01-01'::DATE, 100.0, 105.0, 95.0,  102.0),
+    ('2024-01-02'::DATE, 102.0, 108.0, 101.0, 107.0),
+    ('2024-01-03'::DATE, 107.0, 110.0, 104.0, 106.0),
+    ('2024-01-04'::DATE, 106.0, 112.0, 105.0, 111.0),
+    ('2024-01-05'::DATE, 111.0, 115.0, 109.0, 113.0),
+    ('2024-01-08'::DATE, 113.0, 116.0, 110.0, 114.0),
+    ('2024-01-09'::DATE, 114.0, 118.0, 112.0, 117.0),
+    ('2024-01-10'::DATE, 117.0, 120.0, 115.0, 119.0)
+) AS t(date, open, high, low, close);
+
+# -------------------------------------------------------
+# CDLDOJI — P5 INT: (LIST<DOUBLE> x4) -> LIST<INTEGER>
+# Doji: open price equals (or is very close to) close price
+# Returns 100 (bullish), -100 (bearish), or 0 (not a doji)
+# -------------------------------------------------------
+
+# CDLDOJI scalar: output length matches input length (no lookback)
+query I
+SELECT length(ta_cdldoji(
+    [100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.0]
+));
+----
+3
+
+# CDLDOJI scalar: exact doji candles (open == close) should all be detected
+query I
+SELECT ta_cdldoji(
+    [100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.0]
+)[1];
+----
+100
+
+query I
+SELECT ta_cdldoji(
+    [100.0, 100.0, 100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.0, 100.0, 100.0]
+)[5];
+----
+100
+
+# CDLDOJI scalar: non-doji candle (open far from close) returns 0
+query I
+SELECT ta_cdldoji(
+    [100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.1]  -- 0.1 difference breaks doji
+)[3];
+----
+0
+
+# CDLDOJI scalar: returns LIST<INTEGER> type (check element is integer-valued)
+query I
+SELECT ta_cdldoji(
+    [100.0, 100.0, 100.0],
+    [110.0, 110.0, 110.0],
+    [90.0,  90.0,  90.0],
+    [100.0, 100.0, 100.0]
+) = [100, 100, 100];
+----
+true
+
+# CDLDOJI plain aggregate: detects pattern in all rows of the table
+query I
+SELECT taw_cdldoji(open, high, low, close) FROM ohlc;
+----
+0
+
+# CDLDOJI window function: single-row window — non-doji candles return 0
+query I
+SELECT taw_cdldoji(open, high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN CURRENT ROW AND CURRENT ROW
+) FROM ohlc;
+----
+0
+0
+0
+0
+0
+0
+0
+0
+
+# -------------------------------------------------------
+# CDLHAMMER — P5 INT: (LIST<DOUBLE> x4) -> LIST<INTEGER>
+# Hammer: small body near the top, long lower shadow, no/small upper shadow
+# Returns 100 (bullish hammer), -100 (bearish), or 0 (not a hammer)
+# Note: TA-Lib uses 1-bar lookback for CDLHAMMER (outputs NULL for first bar)
+# -------------------------------------------------------
+
+# CDLHAMMER scalar: output length matches input length
+query I
+SELECT length(ta_cdlhammer(
+    [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
+    [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
+    [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
+    [119.5, 114.5, 109.5, 104.5, 100.5, 100.0]
+));
+----
+6
+
+# CDLHAMMER scalar: first element is NULL (1-bar lookback)
+query I
+SELECT ta_cdlhammer(
+    [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
+    [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
+    [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
+    [119.5, 114.5, 109.5, 104.5, 100.5, 100.0]
+)[1] IS NULL;
+----
+true
+
+# CDLHAMMER scalar: remaining elements are computed (not NULL)
+query I
+SELECT ta_cdlhammer(
+    [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
+    [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
+    [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
+    [119.5, 114.5, 109.5, 104.5, 100.5, 100.0]
+)[2] IS NOT NULL;
+----
+true
+
+# CDLHAMMER plain aggregate: standard OHLC data, no hammer detected
+query I
+SELECT taw_cdlhammer(open, high, low, close) FROM ohlc;
+----
+0
+
+# CDLHAMMER window function: large window — CDLHAMMER returns NULL only for first bar
+query I
+SELECT taw_cdlhammer(open, high, low, close) OVER (
+    ORDER BY date
+    ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
+) FROM ohlc;
+----
+NULL
+0
+0
+0
+0
+0
+0
+0
+
+# -------------------------------------------------------
+# CDLENGULFING — P5 INT: two-bar pattern
+# Bullish engulfing: bearish bar followed by larger bullish bar
+# -------------------------------------------------------
+
+# CDLENGULFING scalar: output length matches input length
+query I
+SELECT length(ta_cdlengulfing(
+    [105.0, 100.0, 103.0],
+    [106.0, 101.0, 108.0],
+    [98.0,  95.0,  99.0],
+    [100.0, 104.0, 107.0]
+));
+----
+3
+
+# CDLENGULFING scalar: first two elements are NULL (2-bar lookback)
+query I
+SELECT ta_cdlengulfing(
+    [105.0, 100.0, 103.0],
+    [106.0, 101.0, 108.0],
+    [98.0,  95.0,  99.0],
+    [100.0, 104.0, 107.0]
+)[1] IS NULL;
+----
+true
+
+query I
+SELECT ta_cdlengulfing(
+    [105.0, 100.0, 103.0],
+    [106.0, 101.0, 108.0],
+    [98.0,  95.0,  99.0],
+    [100.0, 104.0, 107.0]
+)[2] IS NULL;
+----
+true
+
+# CDLENGULFING scalar: result values are 100, -100, or 0
+query I
+SELECT ta_cdlengulfing(
+    [105.0, 100.0, 103.0],
+    [106.0, 101.0, 108.0],
+    [98.0,  95.0,  99.0],
+    [100.0, 104.0, 107.0]
+)[3] IN (100, -100, 0);
+----
+true
