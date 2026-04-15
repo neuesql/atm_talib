@@ -1,5 +1,5 @@
 #include "talib_adapter.hpp"
-#include "duckdb/common/vector/list_vector.hpp"
+// list_vector included via duckdb.hpp
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
 

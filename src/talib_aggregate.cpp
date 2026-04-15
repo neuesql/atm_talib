@@ -2,7 +2,7 @@
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
-#include "duckdb/common/vector/flat_vector.hpp"
+// flat_vector included via duckdb.hpp
 
 extern "C" {
 #include "ta_libc.h"
@@ -151,7 +151,7 @@ struct TalibAggP1Double {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState1 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -266,7 +266,7 @@ struct TalibAggP1Int {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState1 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<int32_t>(result);
+        auto rdata = FlatVector::GetData<int32_t>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -370,7 +370,7 @@ struct TalibAggP2Double {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState1 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -474,7 +474,7 @@ struct TalibAggP2Int {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState1 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<int32_t>(result);
+        auto rdata = FlatVector::GetData<int32_t>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -615,7 +615,7 @@ struct TalibAggP3 {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState3 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -764,7 +764,7 @@ struct TalibAggP4 {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState4 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -915,7 +915,7 @@ struct TalibAggP5Double {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState5 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -1066,7 +1066,7 @@ struct TalibAggP5Int {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState5 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<int32_t>(result);
+        auto rdata = FlatVector::GetData<int32_t>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -1189,7 +1189,7 @@ struct TalibAggP6 {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState6 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -1320,7 +1320,7 @@ struct TalibAggP7 {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState7 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {
@@ -1451,7 +1451,7 @@ struct TalibAggP8 {
 
     static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result, idx_t count, idx_t offset) {
         auto states = FlatVector::GetData<TalibAggState8 *>(states_vec);
-        auto rdata = FlatVector::GetDataMutable<double>(result);
+        auto rdata = FlatVector::GetData<double>(result);
         auto &rmask = FlatVector::Validity(result);
 
         for (idx_t i = 0; i < count; i++) {

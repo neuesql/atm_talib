@@ -1,5 +1,5 @@
 #include "talib_adapter.hpp"
-#include "duckdb/common/vector/list_vector.hpp"
+// list_vector included via duckdb.hpp
 
 namespace duckdb {
 
@@ -25,7 +25,7 @@ std::vector<double> ListToDoubleArray(const list_entry_t &list, const Vector &ch
 void PackDoubleResult(Vector &result, idx_t idx, int input_size,
                       int out_beg_idx, int out_nb_element, const double *out_array) {
     auto list_size = input_size;
-    auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
+    auto list_data = FlatVector::GetData<list_entry_t>(result);
     list_data[idx].offset = ListVector::GetListSize(result);
     list_data[idx].length = list_size;
 
@@ -33,7 +33,7 @@ void PackDoubleResult(Vector &result, idx_t idx, int input_size,
     ListVector::SetListSize(result, list_data[idx].offset + list_size);
 
     auto &child = ListVector::GetEntry(result);
-    auto child_data = FlatVector::GetDataMutable<double>(child);
+    auto child_data = FlatVector::GetData<double>(child);
     auto &child_validity = FlatVector::Validity(child);
 
     auto offset = list_data[idx].offset;
@@ -57,7 +57,7 @@ void PackDoubleResult(Vector &result, idx_t idx, int input_size,
 void PackIntResult(Vector &result, idx_t idx, int input_size,
                    int out_beg_idx, int out_nb_element, const int *out_array) {
     auto list_size = input_size;
-    auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
+    auto list_data = FlatVector::GetData<list_entry_t>(result);
     list_data[idx].offset = ListVector::GetListSize(result);
     list_data[idx].length = list_size;
 
@@ -65,7 +65,7 @@ void PackIntResult(Vector &result, idx_t idx, int input_size,
     ListVector::SetListSize(result, list_data[idx].offset + list_size);
 
     auto &child = ListVector::GetEntry(result);
-    auto child_data = FlatVector::GetDataMutable<int32_t>(child);
+    auto child_data = FlatVector::GetData<int32_t>(child);
     auto &child_validity = FlatVector::Validity(child);
 
     auto offset = list_data[idx].offset;
