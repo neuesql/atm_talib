@@ -1,0 +1,7 @@
+extension:
+  name: talib
+  description: Technical Analysis Library (TA-Lib) functions for DuckDB — 100+ indicators for financial market analysis
+  version: 0.1.0
+  language: C++
+  repo: https://github.com/qunfei/atm_talib
+  ref: main
