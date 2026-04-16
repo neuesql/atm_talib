@@ -17,21 +17,36 @@ LOAD talib;
 
 ```sql
 LOAD talib;
+```
 
--- 📊 Simple Moving Average on a list
-SELECT t_sma(list(close ORDER BY date), 14) FROM ohlc WHERE ticker = 'NVDA';
+Three ways to compute **SMA(14)** on `ohlc` — pick based on your needs:
 
--- 📉 SMA as a window function
-SELECT date, close,
-       ta_sma(close, 14) OVER (ORDER BY date ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14
+```sql
+-- 1️⃣ List form (shortest & fastest): whole-series, returns a LIST<DOUBLE>
+SELECT t_sma(list(close ORDER BY date), 14)
 FROM ohlc WHERE ticker = 'NVDA';
 
+-- 2️⃣ Window, bounded frame (fast, one row per input): recommended for dashboards
+SELECT date, close,
+       ta_sma(close, 14) OVER (ORDER BY date
+                               ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14
+FROM ohlc WHERE ticker = 'NVDA';
+
+-- 3️⃣ Window, default frame (shortest SQL, but O(N²) — avoid on large tables)
+SELECT date, close,
+       ta_sma(close, 14) OVER (ORDER BY date) AS sma_14
+FROM ohlc WHERE ticker = 'NVDA';
+```
+
+More examples:
+
+```sql
 -- 📐 MACD with STRUCT output
 SELECT t_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc WHERE ticker = 'NVDA';
 
 -- 🕯️ Candlestick pattern detection
 SELECT t_cdldoji(list(open ORDER BY date), list(high ORDER BY date),
-                  list(low ORDER BY date), list(close ORDER BY date))
+                 list(low ORDER BY date), list(close ORDER BY date))
 FROM ohlc WHERE ticker = 'NVDA';
 ```
 
