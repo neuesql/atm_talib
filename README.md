@@ -46,7 +46,17 @@ Every TA-Lib function is registered in **two forms**:
 | **Scalar (list)** | `t_` | Pass pre-collected lists, returns list | `t_sma([1.0, 2.0, 3.0], 2)` |
 | **Aggregate (window)** | `ta_` | Use with `OVER()` for row-by-row results | `ta_sma(close, 14) OVER (ORDER BY date ...)` |
 
-> 💡 **Why two prefixes?** DuckDB requires different names for scalar vs aggregate functions. Use `t_` for list-based calls, `ta_` for window functions.
+### Which should I use?
+
+| | 🏎️ Scalar `t_*` | 🧑‍💻 Aggregate `ta_*` |
+|---|---|---|
+| **Performance** | ⚡ Fast — one pass over the full series, O(N) | 🐢 Slower — recomputes per window frame, ~O(N × window) |
+| **Ergonomics** | Requires `list(col ORDER BY date)` + `unnest` to rejoin rows | Natural SQL — plugs into `OVER (PARTITION BY … ORDER BY …)` |
+| **Best for** | Backtests, full-history feature generation, large datasets | Dashboards, ad-hoc queries, mixing indicators with row-level columns |
+
+> 💡 **Rule of thumb:** reach for `t_*` when speed matters or you're computing over a whole series; reach for `ta_*` when the query reads more clearly as a window function.
+>
+> **Why two prefixes?** DuckDB requires different SQL names for scalar and aggregate functions.
 
 ---
 
