@@ -1,13 +1,13 @@
 # DuckDB TA-Lib Extension — SQL Cookbook
 
-This cookbook provides working SQL examples for the DuckDB TA-Lib extension. Each recipe shows both the **scalar form** (`ta_` prefix, takes LIST inputs) and the **window form** (`taw_` prefix, uses `OVER()`) where applicable.
+This cookbook provides working SQL examples for the DuckDB TA-Lib extension. Each recipe shows both the **scalar form** (`t_` prefix, takes LIST inputs) and the **window form** (`ta_` prefix, uses `OVER()`) where applicable.
 
 ## Function Forms at a Glance
 
 | Form | Prefix | Input | Usage |
 |------|--------|-------|-------|
-| Scalar | `ta_` | `LIST<DOUBLE>` | Batch compute over an array literal or subquery |
-| Window | `taw_` | Scalar column | Per-row streaming with `OVER (ORDER BY ... ROWS BETWEEN ...)` |
+| Scalar | `t_` | `LIST<DOUBLE>` | Batch compute over an array literal or subquery |
+| Window | `ta_` | Scalar column | Per-row streaming with `OVER (ORDER BY ... ROWS BETWEEN ...)` |
 
 ---
 
@@ -52,12 +52,12 @@ INSERT INTO ohlc VALUES
 
 ### SMA — Simple Moving Average
 
-Signature: `ta_sma(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_sma(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar: compute 5-period SMA over the full close series
 SELECT unnest(
-    ta_sma(
+    t_sma(
         (SELECT list(close ORDER BY ts) FROM ohlc),
         5
     )
@@ -67,79 +67,79 @@ SELECT unnest(
 SELECT
     ts,
     close,
-    taw_sma(close, 5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS sma_5
+    ta_sma(close, 5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS sma_5
 FROM ohlc;
 ```
 
 ### EMA — Exponential Moving Average
 
-Signature: `ta_ema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_ema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_ema((SELECT list(close ORDER BY ts) FROM ohlc), 10)
+    t_ema((SELECT list(close ORDER BY ts) FROM ohlc), 10)
 ) AS ema_10;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_ema(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS ema_10
+    ta_ema(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS ema_10
 FROM ohlc;
 ```
 
 ### DEMA — Double Exponential Moving Average
 
-Signature: `ta_dema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_dema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_dema((SELECT list(close ORDER BY ts) FROM ohlc), 5)
+    t_dema((SELECT list(close ORDER BY ts) FROM ohlc), 5)
 ) AS dema_5;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_dema(close, 5) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS dema_5
+    ta_dema(close, 5) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS dema_5
 FROM ohlc;
 ```
 
 ### TEMA — Triple Exponential Moving Average
 
-Signature: `ta_tema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_tema(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_tema((SELECT list(close ORDER BY ts) FROM ohlc), 5)
+    t_tema((SELECT list(close ORDER BY ts) FROM ohlc), 5)
 ) AS tema_5;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_tema(close, 5) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS tema_5
+    ta_tema(close, 5) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS tema_5
 FROM ohlc;
 ```
 
 ### KAMA — Kaufman Adaptive Moving Average
 
-Signature: `ta_kama(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_kama(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_kama((SELECT list(close ORDER BY ts) FROM ohlc), 10)
+    t_kama((SELECT list(close ORDER BY ts) FROM ohlc), 10)
 ) AS kama_10;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_kama(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS kama_10
+    ta_kama(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS kama_10
 FROM ohlc;
 ```
 
@@ -151,8 +151,8 @@ WITH signals AS (
     SELECT
         ts,
         close,
-        taw_sma(close, 5)  OVER (ORDER BY ts ROWS BETWEEN  4 PRECEDING AND CURRENT ROW) AS sma_5,
-        taw_sma(close, 10) OVER (ORDER BY ts ROWS BETWEEN  9 PRECEDING AND CURRENT ROW) AS sma_10
+        ta_sma(close, 5)  OVER (ORDER BY ts ROWS BETWEEN  4 PRECEDING AND CURRENT ROW) AS sma_5,
+        ta_sma(close, 10) OVER (ORDER BY ts ROWS BETWEEN  9 PRECEDING AND CURRENT ROW) AS sma_10
     FROM ohlc
 )
 SELECT
@@ -176,19 +176,19 @@ FROM signals;
 
 ### RSI — Relative Strength Index
 
-Signature: `ta_rsi(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_rsi(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_rsi((SELECT list(close ORDER BY ts) FROM ohlc), 14)
+    t_rsi((SELECT list(close ORDER BY ts) FROM ohlc), 14)
 ) AS rsi_14;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_rsi(close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS rsi_14
+    ta_rsi(close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS rsi_14
 FROM ohlc;
 ```
 
@@ -199,7 +199,7 @@ WITH rsi_vals AS (
     SELECT
         ts,
         close,
-        taw_rsi(close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS rsi_14
+        ta_rsi(close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS rsi_14
     FROM ohlc
 )
 SELECT
@@ -217,7 +217,7 @@ WHERE rsi_14 IS NOT NULL;
 
 ### Bollinger Bands
 
-Signature: `ta_bbands(prices LIST<DOUBLE>, time_period INT, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INT) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`
+Signature: `t_bbands(prices LIST<DOUBLE>, time_period INT, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INT) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`
 
 The `ma_type` values follow the TA-Lib `TA_MAType` enum: `0`=SMA, `1`=EMA, `2`=WMA, etc.
 
@@ -225,7 +225,7 @@ The `ma_type` values follow the TA-Lib `TA_MAType` enum: `0`=SMA, `1`=EMA, `2`=W
 -- Scalar: compute Bollinger Bands (20-period, 2 std dev, SMA)
 WITH bb_raw AS (
     SELECT unnest(
-        ta_bbands(
+        t_bbands(
             (SELECT list(close ORDER BY ts) FROM ohlc),
             20,    -- time_period
             2.0,   -- nb_dev_up
@@ -251,7 +251,7 @@ bb_raw AS (
         arr[generate_subscripts(arr, 1)].middle AS middle,
         arr[generate_subscripts(arr, 1)].lower  AS lower
     FROM (
-        SELECT ta_bbands(
+        SELECT t_bbands(
             (SELECT list(close ORDER BY ts) FROM ohlc),
             20, 2.0, 2.0, 0
         ) AS arr
@@ -268,13 +268,13 @@ JOIN bb_raw b USING (rn);
 
 ### MACD — Moving Average Convergence/Divergence
 
-Signature: `ta_macd(prices LIST<DOUBLE>, fast_period INT, slow_period INT, signal_period INT) -> LIST<STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)>`
+Signature: `t_macd(prices LIST<DOUBLE>, fast_period INT, slow_period INT, signal_period INT) -> LIST<STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)>`
 
 ```sql
 -- Scalar: standard MACD (12, 26, 9)
 WITH macd_raw AS (
     SELECT unnest(
-        ta_macd(
+        t_macd(
             (SELECT list(close ORDER BY ts) FROM ohlc),
             12,  -- fast_period
             26,  -- slow_period
@@ -292,30 +292,30 @@ WHERE m.macd IS NOT NULL;
 
 ### ROC — Rate of Change
 
-Signature: `ta_roc(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_roc(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_roc((SELECT list(close ORDER BY ts) FROM ohlc), 10)
+    t_roc((SELECT list(close ORDER BY ts) FROM ohlc), 10)
 ) AS roc_10;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_roc(close, 10) OVER (ORDER BY ts ROWS BETWEEN 10 PRECEDING AND CURRENT ROW) AS roc_10
+    ta_roc(close, 10) OVER (ORDER BY ts ROWS BETWEEN 10 PRECEDING AND CURRENT ROW) AS roc_10
 FROM ohlc;
 ```
 
 ### Williams %R
 
-Signature: `ta_willr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_willr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_willr(
+    t_willr(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc),
@@ -327,18 +327,18 @@ SELECT unnest(
 SELECT
     ts,
     close,
-    taw_willr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS willr_14
+    ta_willr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS willr_14
 FROM ohlc;
 ```
 
 ### CCI — Commodity Channel Index
 
-Signature: `ta_cci(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_cci(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_cci(
+    t_cci(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc),
@@ -350,18 +350,18 @@ SELECT unnest(
 SELECT
     ts,
     close,
-    taw_cci(high, low, close, 20) OVER (ORDER BY ts ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS cci_20
+    ta_cci(high, low, close, 20) OVER (ORDER BY ts ROWS BETWEEN 19 PRECEDING AND CURRENT ROW) AS cci_20
 FROM ohlc;
 ```
 
 ### ADX — Average Directional Index
 
-Signature: `ta_adx(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_adx(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_adx(
+    t_adx(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc),
@@ -372,7 +372,7 @@ SELECT unnest(
 -- Window
 SELECT
     ts,
-    taw_adx(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 27 PRECEDING AND CURRENT ROW) AS adx_14
+    ta_adx(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 27 PRECEDING AND CURRENT ROW) AS adx_14
 FROM ohlc;
 ```
 
@@ -382,14 +382,14 @@ FROM ohlc;
 
 ### AD — Chaikin A/D Line
 
-Signature: `ta_ad(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, volume LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_ad(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, volume LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 Note: AD has no lookback period — it outputs a value for every input bar.
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_ad(
+    t_ad(
         (SELECT list(high   ORDER BY ts) FROM ohlc),
         (SELECT list(low    ORDER BY ts) FROM ohlc),
         (SELECT list(close  ORDER BY ts) FROM ohlc),
@@ -402,7 +402,7 @@ SELECT
     ts,
     close,
     volume,
-    taw_ad(high, low, close, volume) OVER (ORDER BY ts) AS ad_line
+    ta_ad(high, low, close, volume) OVER (ORDER BY ts) AS ad_line
 FROM ohlc;
 ```
 
@@ -412,12 +412,12 @@ FROM ohlc;
 
 ### ATR — Average True Range
 
-Signature: `ta_atr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_atr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_atr(
+    t_atr(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc),
@@ -428,18 +428,18 @@ SELECT unnest(
 -- Window
 SELECT
     ts,
-    taw_atr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS atr_14
+    ta_atr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS atr_14
 FROM ohlc;
 ```
 
 ### NATR — Normalized Average True Range
 
-Signature: `ta_natr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_natr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_natr(
+    t_natr(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc),
@@ -451,18 +451,18 @@ SELECT unnest(
 SELECT
     ts,
     close,
-    taw_natr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS natr_14
+    ta_natr(high, low, close, 14) OVER (ORDER BY ts ROWS BETWEEN 14 PRECEDING AND CURRENT ROW) AS natr_14
 FROM ohlc;
 ```
 
 ### TRANGE — True Range
 
-Signature: `ta_trange(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_trange(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar (no period required)
 SELECT unnest(
-    ta_trange(
+    t_trange(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc)
@@ -473,7 +473,7 @@ SELECT unnest(
 SELECT
     ts,
     high, low, close,
-    taw_trange(high, low, close) OVER (ORDER BY ts) AS true_range
+    ta_trange(high, low, close) OVER (ORDER BY ts) AS true_range
 FROM ohlc;
 ```
 
@@ -485,12 +485,12 @@ Pattern recognition functions take OHLC inputs and return an integer: `100` = bu
 
 ### CDLDOJI
 
-Signature: `ta_cdldoji(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
+Signature: `t_cdldoji(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_cdldoji(
+    t_cdldoji(
         (SELECT list(open  ORDER BY ts) FROM ohlc),
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
@@ -501,19 +501,19 @@ SELECT unnest(
 -- Window: flag doji candles
 SELECT
     ts, open, high, low, close,
-    taw_cdldoji(open, high, low, close) OVER (ORDER BY ts) AS doji
+    ta_cdldoji(open, high, low, close) OVER (ORDER BY ts) AS doji
 FROM ohlc
-WHERE taw_cdldoji(open, high, low, close) OVER (ORDER BY ts) != 0;
+WHERE ta_cdldoji(open, high, low, close) OVER (ORDER BY ts) != 0;
 ```
 
 ### CDLHAMMER
 
-Signature: `ta_cdlhammer(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
+Signature: `t_cdlhammer(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_cdlhammer(
+    t_cdlhammer(
         (SELECT list(open  ORDER BY ts) FROM ohlc),
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
@@ -524,18 +524,18 @@ SELECT unnest(
 -- Window
 SELECT
     ts, open, high, low, close,
-    taw_cdlhammer(open, high, low, close) OVER (ORDER BY ts) AS hammer
+    ta_cdlhammer(open, high, low, close) OVER (ORDER BY ts) AS hammer
 FROM ohlc;
 ```
 
 ### CDLENGULFING
 
-Signature: `ta_cdlengulfing(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
+Signature: `t_cdlengulfing(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INT>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_cdlengulfing(
+    t_cdlengulfing(
         (SELECT list(open  ORDER BY ts) FROM ohlc),
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
@@ -546,7 +546,7 @@ SELECT unnest(
 -- Window: label direction
 SELECT
     ts, open, high, low, close,
-    CASE taw_cdlengulfing(open, high, low, close) OVER (ORDER BY ts)
+    CASE ta_cdlengulfing(open, high, low, close) OVER (ORDER BY ts)
         WHEN  100 THEN 'BULLISH ENGULFING'
         WHEN -100 THEN 'BEARISH ENGULFING'
         ELSE NULL
@@ -560,10 +560,10 @@ FROM ohlc;
 -- Find any bullish candle pattern on each bar
 SELECT
     ts, open, high, low, close,
-    taw_cdlhammer    (open, high, low, close) OVER (ORDER BY ts) AS hammer,
-    taw_cdlengulfing (open, high, low, close) OVER (ORDER BY ts) AS engulfing,
-    taw_cdldoji      (open, high, low, close) OVER (ORDER BY ts) AS doji,
-    taw_cdlharami    (open, high, low, close) OVER (ORDER BY ts) AS harami
+    ta_cdlhammer    (open, high, low, close) OVER (ORDER BY ts) AS hammer,
+    ta_cdlengulfing (open, high, low, close) OVER (ORDER BY ts) AS engulfing,
+    ta_cdldoji      (open, high, low, close) OVER (ORDER BY ts) AS doji,
+    ta_cdlharami    (open, high, low, close) OVER (ORDER BY ts) AS harami
 FROM ohlc;
 ```
 
@@ -573,12 +573,12 @@ FROM ohlc;
 
 ### AVGPRICE — Average of OHLC
 
-Signature: `ta_avgprice(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_avgprice(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_avgprice(
+    t_avgprice(
         (SELECT list(open  ORDER BY ts) FROM ohlc),
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
@@ -587,18 +587,18 @@ SELECT unnest(
 ) AS avg_price;
 
 -- Window
-SELECT ts, taw_avgprice(open, high, low, close) OVER (ORDER BY ts) AS avg_price
+SELECT ts, ta_avgprice(open, high, low, close) OVER (ORDER BY ts) AS avg_price
 FROM ohlc;
 ```
 
 ### TYPPRICE — Typical Price (H+L+C)/3
 
-Signature: `ta_typprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_typprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_typprice(
+    t_typprice(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc)
@@ -606,36 +606,36 @@ SELECT unnest(
 ) AS typical_price;
 
 -- Window
-SELECT ts, taw_typprice(high, low, close) OVER (ORDER BY ts) AS typical_price
+SELECT ts, ta_typprice(high, low, close) OVER (ORDER BY ts) AS typical_price
 FROM ohlc;
 ```
 
 ### MEDPRICE — Median Price (H+L)/2
 
-Signature: `ta_medprice(high LIST<DOUBLE>, low LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_medprice(high LIST<DOUBLE>, low LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_medprice(
+    t_medprice(
         (SELECT list(high ORDER BY ts) FROM ohlc),
         (SELECT list(low  ORDER BY ts) FROM ohlc)
     )
 ) AS median_price;
 
 -- Window
-SELECT ts, taw_medprice(high, low) OVER (ORDER BY ts) AS median_price
+SELECT ts, ta_medprice(high, low) OVER (ORDER BY ts) AS median_price
 FROM ohlc;
 ```
 
 ### WCLPRICE — Weighted Close Price (H+L+2*C)/4
 
-Signature: `ta_wclprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
+Signature: `t_wclprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_wclprice(
+    t_wclprice(
         (SELECT list(high  ORDER BY ts) FROM ohlc),
         (SELECT list(low   ORDER BY ts) FROM ohlc),
         (SELECT list(close ORDER BY ts) FROM ohlc)
@@ -643,7 +643,7 @@ SELECT unnest(
 ) AS wcl_price;
 
 -- Window
-SELECT ts, taw_wclprice(high, low, close) OVER (ORDER BY ts) AS wcl_price
+SELECT ts, ta_wclprice(high, low, close) OVER (ORDER BY ts) AS wcl_price
 FROM ohlc;
 ```
 
@@ -653,40 +653,40 @@ FROM ohlc;
 
 ### LINEARREG — Linear Regression Value
 
-Signature: `ta_linearreg(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+Signature: `t_linearreg(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT unnest(
-    ta_linearreg((SELECT list(close ORDER BY ts) FROM ohlc), 14)
+    t_linearreg((SELECT list(close ORDER BY ts) FROM ohlc), 14)
 ) AS linreg_14;
 
 -- Window
 SELECT
     ts,
     close,
-    taw_linearreg(close, 14) OVER (ORDER BY ts ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS linreg_14
+    ta_linearreg(close, 14) OVER (ORDER BY ts ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS linreg_14
 FROM ohlc;
 ```
 
 ### MAX / MIN — Rolling Maximum / Minimum
 
 Signatures:
-- `ta_max(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
-- `ta_min(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+- `t_max(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
+- `t_min(prices LIST<DOUBLE>, time_period INT) -> LIST<DOUBLE>`
 
 ```sql
 -- Scalar
 SELECT
-    unnest(ta_max((SELECT list(close ORDER BY ts) FROM ohlc), 5)) AS rolling_max_5,
-    unnest(ta_min((SELECT list(close ORDER BY ts) FROM ohlc), 5)) AS rolling_min_5;
+    unnest(t_max((SELECT list(close ORDER BY ts) FROM ohlc), 5)) AS rolling_max_5,
+    unnest(t_min((SELECT list(close ORDER BY ts) FROM ohlc), 5)) AS rolling_min_5;
 
 -- Window: rolling 5-day high/low channel
 SELECT
     ts,
     close,
-    taw_max(high, 5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS channel_high,
-    taw_min(low,  5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS channel_low
+    ta_max(high, 5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS channel_high,
+    ta_min(low,  5) OVER (ORDER BY ts ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS channel_low
 FROM ohlc;
 ```
 
@@ -697,10 +697,10 @@ FROM ohlc;
 SELECT
     ts,
     close,
-    taw_linearreg_slope(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS slope,
-    taw_linearreg_angle(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS angle_deg,
+    ta_linearreg_slope(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS slope,
+    ta_linearreg_angle(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) AS angle_deg,
     CASE
-        WHEN taw_linearreg_slope(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) > 0
+        WHEN ta_linearreg_slope(close, 10) OVER (ORDER BY ts ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) > 0
         THEN 'UPTREND'
         ELSE 'DOWNTREND'
     END AS trend
@@ -725,7 +725,7 @@ WITH base AS (
 macd_result AS (
     SELECT
         unnest(ts_arr)                AS ts,
-        unnest(ta_macd(price_arr, 12, 26, 9)) AS m
+        unnest(t_macd(price_arr, 12, 26, 9)) AS m
     FROM base
 )
 SELECT
@@ -740,7 +740,7 @@ ORDER BY ts;
 
 ### BBANDS — Bollinger Bands
 
-Signature: `ta_bbands(prices LIST<DOUBLE>, time_period INT, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INT) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`
+Signature: `t_bbands(prices LIST<DOUBLE>, time_period INT, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INT) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`
 
 ```sql
 WITH base AS (
@@ -752,7 +752,7 @@ WITH base AS (
 bb_result AS (
     SELECT
         unnest(ts_arr)                              AS ts,
-        unnest(ta_bbands(price_arr, 20, 2.0, 2.0, 0)) AS bb
+        unnest(t_bbands(price_arr, 20, 2.0, 2.0, 0)) AS bb
     FROM base
 )
 SELECT
@@ -769,7 +769,7 @@ ORDER BY ts;
 
 ### STOCH — Stochastic Oscillator
 
-Signature: `ta_stoch(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, fastk_period INT, slowk_period INT, slowk_matype INT, slowd_period INT, slowd_matype INT) -> LIST<STRUCT(slowk DOUBLE, slowd DOUBLE)>`
+Signature: `t_stoch(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, fastk_period INT, slowk_period INT, slowk_matype INT, slowd_period INT, slowd_matype INT) -> LIST<STRUCT(slowk DOUBLE, slowd DOUBLE)>`
 
 ```sql
 WITH base AS (
@@ -783,7 +783,7 @@ WITH base AS (
 stoch_result AS (
     SELECT
         unnest(ts_arr)                                              AS ts,
-        unnest(ta_stoch(high_arr, low_arr, close_arr, 5, 3, 0, 3, 0)) AS s
+        unnest(t_stoch(high_arr, low_arr, close_arr, 5, 3, 0, 3, 0)) AS s
     FROM base
 )
 SELECT
@@ -802,7 +802,7 @@ ORDER BY ts;
 
 ### AROON — Aroon Oscillator
 
-Signature: `ta_aroon(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INT) -> LIST<STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)>`
+Signature: `t_aroon(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INT) -> LIST<STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)>`
 
 ```sql
 WITH base AS (
@@ -815,7 +815,7 @@ WITH base AS (
 aroon_result AS (
     SELECT
         unnest(ts_arr)                          AS ts,
-        unnest(ta_aroon(high_arr, low_arr, 14)) AS ar
+        unnest(t_aroon(high_arr, low_arr, 14)) AS ar
     FROM base
 )
 SELECT
@@ -830,7 +830,7 @@ ORDER BY ts;
 
 ### MINMAX — Rolling Min and Max in one pass
 
-Signature: `ta_minmax(prices LIST<DOUBLE>, time_period INT) -> LIST<STRUCT(min DOUBLE, max DOUBLE)>`
+Signature: `t_minmax(prices LIST<DOUBLE>, time_period INT) -> LIST<STRUCT(min DOUBLE, max DOUBLE)>`
 
 ```sql
 WITH base AS (
@@ -842,7 +842,7 @@ WITH base AS (
 mm_result AS (
     SELECT
         unnest(ts_arr)                       AS ts,
-        unnest(ta_minmax(price_arr, 10))     AS mm
+        unnest(t_minmax(price_arr, 10))     AS mm
     FROM base
 )
 SELECT
@@ -857,7 +857,7 @@ ORDER BY ts;
 
 ### MAMA — MESA Adaptive Moving Average
 
-Signature: `ta_mama(prices LIST<DOUBLE>, fast_limit DOUBLE, slow_limit DOUBLE) -> LIST<STRUCT(mama DOUBLE, fama DOUBLE)>`
+Signature: `t_mama(prices LIST<DOUBLE>, fast_limit DOUBLE, slow_limit DOUBLE) -> LIST<STRUCT(mama DOUBLE, fama DOUBLE)>`
 
 ```sql
 WITH base AS (
@@ -869,7 +869,7 @@ WITH base AS (
 mama_result AS (
     SELECT
         unnest(ts_arr)                           AS ts,
-        unnest(ta_mama(price_arr, 0.5, 0.05))   AS m
+        unnest(t_mama(price_arr, 0.5, 0.05))   AS m
     FROM base
 )
 SELECT
@@ -887,7 +887,7 @@ ORDER BY ts;
 
 ### Aligning scalar results with timestamps
 
-The scalar (`ta_`) functions return arrays that are aligned with the input in index order. Use parallel `unnest` or a CTE with `list(ts ORDER BY ts)` alongside the prices to keep timestamps attached:
+The scalar (`t_`) functions return arrays that are aligned with the input in index order. Use parallel `unnest` or a CTE with `list(ts ORDER BY ts)` alongside the prices to keep timestamps attached:
 
 ```sql
 WITH base AS (
@@ -898,7 +898,7 @@ WITH base AS (
 )
 SELECT
     unnest(ts_arr)                     AS ts,
-    unnest(ta_sma(price_arr, 5))       AS sma_5
+    unnest(t_sma(price_arr, 5))       AS sma_5
 FROM base;
 ```
 

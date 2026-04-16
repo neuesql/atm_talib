@@ -19,18 +19,18 @@ LOAD talib;
 LOAD talib;
 
 -- 📊 Simple Moving Average on a list
-SELECT ta_sma(list(close ORDER BY date), 14) FROM ohlc WHERE ticker = 'NVDA';
+SELECT t_sma(list(close ORDER BY date), 14) FROM ohlc WHERE ticker = 'NVDA';
 
 -- 📉 SMA as a window function
 SELECT date, close,
-       taw_sma(close, 14) OVER (ORDER BY date ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14
+       ta_sma(close, 14) OVER (ORDER BY date ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14
 FROM ohlc WHERE ticker = 'NVDA';
 
 -- 📐 MACD with STRUCT output
-SELECT ta_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc WHERE ticker = 'NVDA';
+SELECT t_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc WHERE ticker = 'NVDA';
 
 -- 🕯️ Candlestick pattern detection
-SELECT ta_cdldoji(list(open ORDER BY date), list(high ORDER BY date),
+SELECT t_cdldoji(list(open ORDER BY date), list(high ORDER BY date),
                   list(low ORDER BY date), list(close ORDER BY date))
 FROM ohlc WHERE ticker = 'NVDA';
 ```
@@ -43,10 +43,10 @@ Every TA-Lib function is registered in **two forms**:
 
 | Form | Prefix | Usage | Example |
 |------|--------|-------|---------|
-| **Scalar (list)** | `ta_` | Pass pre-collected lists, returns list | `ta_sma([1.0, 2.0, 3.0], 2)` |
-| **Aggregate (window)** | `taw_` | Use with `OVER()` for row-by-row results | `taw_sma(close, 14) OVER (ORDER BY date ...)` |
+| **Scalar (list)** | `t_` | Pass pre-collected lists, returns list | `t_sma([1.0, 2.0, 3.0], 2)` |
+| **Aggregate (window)** | `ta_` | Use with `OVER()` for row-by-row results | `ta_sma(close, 14) OVER (ORDER BY date ...)` |
 
-> 💡 **Why two prefixes?** DuckDB requires different names for scalar vs aggregate functions. Use `ta_` for list-based calls, `taw_` for window functions.
+> 💡 **Why two prefixes?** DuckDB requires different names for scalar vs aggregate functions. Use `t_` for list-based calls, `ta_` for window functions.
 
 ---
 
@@ -54,15 +54,15 @@ Every TA-Lib function is registered in **two forms**:
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| 🔀 Overlap Studies | 8+ | `ta_sma`, `ta_ema`, `ta_wma`, `ta_dema`, `ta_tema` |
-| 🏃 Momentum | 15+ | `ta_rsi`, `ta_macd`, `ta_willr`, `ta_cci`, `ta_adx` |
-| 🔊 Volume | 1+ | `ta_ad` |
-| 🌊 Volatility | 2+ | `ta_atr`, `ta_natr` |
-| 🕯️ Pattern Recognition | 49+ | `ta_cdldoji`, `ta_cdlhammer`, `ta_cdlengulfing` |
-| 💰 Price Transform | 2+ | `ta_avgprice`, `ta_bop` |
-| 🔄 Cycle Indicators | 4+ | `ta_ht_dcperiod`, `ta_ht_trendline`, `ta_ht_trendmode` |
-| 📏 Statistics | 10+ | `ta_linearreg`, `ta_tsf`, `ta_max`, `ta_min` |
-| ➗ Math Transform | 15 | `ta_sin`, `ta_cos`, `ta_ln`, `ta_sqrt` |
+| 🔀 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema` |
+| 🏃 Momentum | 15+ | `t_rsi`, `t_macd`, `t_willr`, `t_cci`, `t_adx` |
+| 🔊 Volume | 1+ | `t_ad` |
+| 🌊 Volatility | 2+ | `t_atr`, `t_natr` |
+| 🕯️ Pattern Recognition | 49+ | `t_cdldoji`, `t_cdlhammer`, `t_cdlengulfing` |
+| 💰 Price Transform | 2+ | `t_avgprice`, `t_bop` |
+| 🔄 Cycle Indicators | 4+ | `t_ht_dcperiod`, `t_ht_trendline`, `t_ht_trendmode` |
+| 📏 Statistics | 10+ | `t_linearreg`, `t_tsf`, `t_max`, `t_min` |
+| ➗ Math Transform | 15 | `t_sin`, `t_cos`, `t_ln`, `t_sqrt` |
 
 ---
 
@@ -72,17 +72,17 @@ Functions like MACD and Bollinger Bands return `LIST<STRUCT>` types:
 
 ```sql
 -- 📐 MACD → LIST<STRUCT(macd, signal, hist)>
-SELECT ta_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc;
+SELECT t_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc;
 
 -- 📊 BBANDS → LIST<STRUCT(upper, middle, lower)>
-SELECT ta_bbands(list(close ORDER BY date), 20, 2.0, 2.0, 0) FROM ohlc;
+SELECT t_bbands(list(close ORDER BY date), 20, 2.0, 2.0, 0) FROM ohlc;
 
 -- 📈 STOCH → LIST<STRUCT(slowk, slowd)>
-SELECT ta_stoch(list(high ORDER BY date), list(low ORDER BY date),
+SELECT t_stoch(list(high ORDER BY date), list(low ORDER BY date),
                 list(close ORDER BY date), 5, 3, 0, 3, 0) FROM ohlc;
 
 -- 🏹 AROON → LIST<STRUCT(aroon_down, aroon_up)>
-SELECT ta_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
+SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 ```
 
 ---
@@ -91,18 +91,20 @@ SELECT ta_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc
 
 | Pattern | Scalar Signature | Example |
 |---------|-----------------|---------|
-| P1 | `(LIST<DOUBLE>, INTEGER)` | `ta_sma(values, period)` |
-| P2 | `(LIST<DOUBLE>)` | `ta_sin(values)` |
-| P3 | `(LIST<DOUBLE> x3, INTEGER)` | `ta_willr(high, low, close, period)` |
-| P4 | `(LIST<DOUBLE> x4)` | `ta_ad(high, low, close, volume)` |
-| P5 | `(LIST<DOUBLE> x4)` | `ta_cdldoji(open, high, low, close)` |
-| P6 | `(LIST<DOUBLE> x2)` | `ta_medprice(high, low)` |
-| P7 | `(LIST<DOUBLE> x3)` | `ta_typprice(high, low, close)` |
-| P8 | `(LIST<DOUBLE> x2, INTEGER)` | `ta_midprice(high, low, period)` |
+| P1 | `(LIST<DOUBLE>, INTEGER)` | `t_sma(values, period)` |
+| P2 | `(LIST<DOUBLE>)` | `t_sin(values)` |
+| P3 | `(LIST<DOUBLE> x3, INTEGER)` | `t_willr(high, low, close, period)` |
+| P4 | `(LIST<DOUBLE> x4)` | `t_ad(high, low, close, volume)` |
+| P5 | `(LIST<DOUBLE> x4)` | `t_cdldoji(open, high, low, close)` |
+| P6 | `(LIST<DOUBLE> x2)` | `t_medprice(high, low)` |
+| P7 | `(LIST<DOUBLE> x3)` | `t_typprice(high, low, close)` |
+| P8 | `(LIST<DOUBLE> x2, INTEGER)` | `t_midprice(high, low, period)` |
 
 ---
 
 ## 🖥️ Platforms
+
+> ⚠️ **DuckDB version:** Only **v1.5.2** is supported.
 
 | Platform | Architectures |
 |----------|--------------|

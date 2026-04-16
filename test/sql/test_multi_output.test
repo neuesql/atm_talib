@@ -6,7 +6,7 @@ require talib
 
 # MACD: need enough data points (at least 26+9-1 = 34 for default params)
 query I
-SELECT length(ta_macd(
+SELECT length(t_macd(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0,
      121.0, 118.0, 115.0, 117.0, 120.0, 122.0, 125.0, 128.0,
      130.0, 127.0, 124.0, 126.0, 129.0, 131.0, 134.0, 137.0,
@@ -19,7 +19,7 @@ SELECT length(ta_macd(
 
 # MACD: check struct fields are accessible
 query I
-SELECT (ta_macd(
+SELECT (t_macd(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0,
      121.0, 118.0, 115.0, 117.0, 120.0, 122.0, 125.0, 128.0,
      130.0, 127.0, 124.0, 126.0, 129.0, 131.0, 134.0, 137.0,
@@ -32,7 +32,7 @@ true
 
 # MACD: first elements should be NULL (lookback period)
 query I
-SELECT (ta_macd(
+SELECT (t_macd(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0,
      121.0, 118.0, 115.0, 117.0, 120.0, 122.0, 125.0, 128.0,
      130.0, 127.0, 124.0, 126.0, 129.0, 131.0, 134.0, 137.0,
@@ -45,7 +45,7 @@ true
 
 # BBANDS
 query I
-SELECT length(ta_bbands(
+SELECT length(t_bbands(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     5, 2.0, 2.0, 0
 ));
@@ -54,7 +54,7 @@ SELECT length(ta_bbands(
 
 # BBANDS: struct fields accessible
 query I
-SELECT (ta_bbands(
+SELECT (t_bbands(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     5, 2.0, 2.0, 0
 ))[5].upper IS NOT NULL;
@@ -63,7 +63,7 @@ true
 
 # AROON
 query I
-SELECT length(ta_aroon(
+SELECT length(t_aroon(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     [100.0, 105.0, 104.0, 109.0, 111.0, 112.0, 115.0, 117.0, 119.0, 116.0],
     5
@@ -73,7 +73,7 @@ SELECT length(ta_aroon(
 
 # AROON: struct fields
 query I
-SELECT (ta_aroon(
+SELECT (t_aroon(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     [100.0, 105.0, 104.0, 109.0, 111.0, 112.0, 115.0, 117.0, 119.0, 116.0],
     5
@@ -83,7 +83,7 @@ true
 
 # STOCH
 query I
-SELECT length(ta_stoch(
+SELECT length(t_stoch(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0,
      115.0, 117.0, 120.0, 122.0, 125.0, 128.0, 130.0, 127.0, 124.0, 126.0],
     [100.0, 105.0, 104.0, 109.0, 111.0, 112.0, 115.0, 117.0, 119.0, 116.0,
@@ -97,7 +97,7 @@ SELECT length(ta_stoch(
 
 # MINMAX
 query I
-SELECT length(ta_minmax(
+SELECT length(t_minmax(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     5
 ));
@@ -106,7 +106,7 @@ SELECT length(ta_minmax(
 
 # MINMAX: struct fields
 query I
-SELECT (ta_minmax(
+SELECT (t_minmax(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0],
     5
 ))[10].min IS NOT NULL;
@@ -115,7 +115,7 @@ true
 
 # MAMA
 query I
-SELECT length(ta_mama(
+SELECT length(t_mama(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0,
      115.0, 117.0, 120.0, 122.0, 125.0, 128.0, 130.0, 127.0, 124.0, 126.0,
      129.0, 131.0, 134.0, 137.0, 140.0, 138.0, 135.0, 137.0, 140.0, 142.0,
@@ -127,7 +127,7 @@ SELECT length(ta_mama(
 
 # HT_PHASOR
 query I
-SELECT length(ta_ht_phasor(
+SELECT length(t_ht_phasor(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0,
      115.0, 117.0, 120.0, 122.0, 125.0, 128.0, 130.0, 127.0, 124.0, 126.0,
      129.0, 131.0, 134.0, 137.0, 140.0, 138.0, 135.0, 137.0, 140.0, 142.0,
@@ -138,7 +138,7 @@ SELECT length(ta_ht_phasor(
 
 # HT_SINE
 query I
-SELECT length(ta_ht_sine(
+SELECT length(t_ht_sine(
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0,
      115.0, 117.0, 120.0, 122.0, 125.0, 128.0, 130.0, 127.0, 124.0, 126.0,
      129.0, 131.0, 134.0, 137.0, 140.0, 138.0, 135.0, 137.0, 140.0, 142.0,

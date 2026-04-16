@@ -17,7 +17,7 @@ SELECT * FROM (VALUES
 
 # SMA with PARTITION BY
 query TR
-SELECT ticker, round(taw_sma(close, 2) OVER (
+SELECT ticker, round(ta_sma(close, 2) OVER (
     PARTITION BY ticker ORDER BY date
     ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
 ), 2)

@@ -381,7 +381,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // MACD: (LIST<DOUBLE>, INT, INT, INT) -> LIST<STRUCT(macd, signal, hist)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_macd",
+        "t_macd",
         {LIST_DOUBLE, LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::INTEGER},
         MakeStructList({{"macd", LogicalType::DOUBLE}, {"signal", LogicalType::DOUBLE}, {"hist", LogicalType::DOUBLE}}),
         TalibMacdScalar
@@ -389,7 +389,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // BBANDS: (LIST<DOUBLE>, INT, DOUBLE, DOUBLE, INT) -> LIST<STRUCT(upper, middle, lower)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_bbands",
+        "t_bbands",
         {LIST_DOUBLE, LogicalType::INTEGER, LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::INTEGER},
         MakeStructList({{"upper", LogicalType::DOUBLE}, {"middle", LogicalType::DOUBLE}, {"lower", LogicalType::DOUBLE}}),
         TalibBbandsScalar
@@ -397,7 +397,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // STOCH: (LIST<DOUBLE> x3, INT, INT, INT, INT, INT) -> LIST<STRUCT(slowk, slowd)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_stoch",
+        "t_stoch",
         {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE,
          LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::INTEGER,
          LogicalType::INTEGER, LogicalType::INTEGER},
@@ -407,7 +407,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // AROON: (LIST<DOUBLE> x2, INT) -> LIST<STRUCT(aroon_down, aroon_up)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_aroon",
+        "t_aroon",
         {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},
         MakeStructList({{"aroon_down", LogicalType::DOUBLE}, {"aroon_up", LogicalType::DOUBLE}}),
         TalibAroonScalar
@@ -415,7 +415,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // MINMAX: (LIST<DOUBLE>, INT) -> LIST<STRUCT(min, max)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_minmax",
+        "t_minmax",
         {LIST_DOUBLE, LogicalType::INTEGER},
         MakeStructList({{"min", LogicalType::DOUBLE}, {"max", LogicalType::DOUBLE}}),
         TalibMinMaxScalar
@@ -423,7 +423,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // MAMA: (LIST<DOUBLE>, DOUBLE, DOUBLE) -> LIST<STRUCT(mama, fama)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_mama",
+        "t_mama",
         {LIST_DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE},
         MakeStructList({{"mama", LogicalType::DOUBLE}, {"fama", LogicalType::DOUBLE}}),
         TalibMamaScalar
@@ -431,7 +431,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // HT_PHASOR: (LIST<DOUBLE>) -> LIST<STRUCT(inphase, quadrature)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_ht_phasor",
+        "t_ht_phasor",
         {LIST_DOUBLE},
         MakeStructList({{"inphase", LogicalType::DOUBLE}, {"quadrature", LogicalType::DOUBLE}}),
         TalibHtPhasorScalar
@@ -439,7 +439,7 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
     // HT_SINE: (LIST<DOUBLE>) -> LIST<STRUCT(sine, leadsine)>
     loader.RegisterFunction(ScalarFunction(
-        "ta_ht_sine",
+        "t_ht_sine",
         {LIST_DOUBLE},
         MakeStructList({{"sine", LogicalType::DOUBLE}, {"leadsine", LogicalType::DOUBLE}}),
         TalibHtSineScalar

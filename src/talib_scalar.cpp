@@ -343,7 +343,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P1 DOUBLE: (LIST<DOUBLE>, INTEGER) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P1_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LogicalType::INTEGER}, \
             LIST_DOUBLE, \
             TalibScalarP1Double<ta_func>));
@@ -351,7 +351,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P1 INT: (LIST<DOUBLE>, INTEGER) -> LIST<INTEGER> ---
     #define TALIB_SCALAR_P1_INT(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LogicalType::INTEGER}, \
             LIST_INT, \
             TalibScalarP1Int<ta_func>));
@@ -359,7 +359,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P2 DOUBLE: (LIST<DOUBLE>) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P2_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE}, \
             LIST_DOUBLE, \
             TalibScalarP2Double<ta_func>));
@@ -367,7 +367,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P2 INT: (LIST<DOUBLE>) -> LIST<INTEGER> ---
     #define TALIB_SCALAR_P2_INT(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE}, \
             LIST_INT, \
             TalibScalarP2Int<ta_func>));
@@ -375,7 +375,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P3 DOUBLE: (LIST<DOUBLE> x3, INTEGER) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P3_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER}, \
             LIST_DOUBLE, \
             TalibScalarP3<ta_func>));
@@ -383,7 +383,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P4 DOUBLE: (LIST<DOUBLE> x4) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P4_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE}, \
             LIST_DOUBLE, \
             TalibScalarP4<ta_func>));
@@ -391,7 +391,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P5 DOUBLE: (LIST<DOUBLE> x4) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P5_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE}, \
             LIST_DOUBLE, \
             TalibScalarP5Double<ta_func>));
@@ -399,7 +399,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P5 INT: (LIST<DOUBLE> x4) -> LIST<INTEGER> ---
     #define TALIB_SCALAR_P5_INT(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE}, \
             LIST_INT, \
             TalibScalarP5Int<ta_func>));
@@ -407,7 +407,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P6 DOUBLE: (LIST<DOUBLE> x2) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P6_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE}, \
             LIST_DOUBLE, \
             TalibScalarP6<ta_func>));
@@ -415,7 +415,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P7 DOUBLE: (LIST<DOUBLE> x3) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P7_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE}, \
             LIST_DOUBLE, \
             TalibScalarP7<ta_func>));
@@ -423,7 +423,7 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
     // --- P8 DOUBLE: (LIST<DOUBLE> x2, INTEGER) -> LIST<DOUBLE> ---
     #define TALIB_SCALAR_P8_DOUBLE(sql_name, ta_func) \
         loader.RegisterFunction(ScalarFunction( \
-            "ta_" #sql_name, \
+            "t_" #sql_name, \
             {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER}, \
             LIST_DOUBLE, \
             TalibScalarP8<ta_func>));

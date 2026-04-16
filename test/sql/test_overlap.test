@@ -19,13 +19,13 @@ SELECT * FROM (VALUES
 
 # SMA as plain aggregate (should return mean of all close values)
 query R
-SELECT round(taw_sma(close, 8), 2) FROM ohlc;
+SELECT round(ta_sma(close, 8), 2) FROM ohlc;
 ----
 111.13
 
 # SMA window function with period=3
 query R
-SELECT round(taw_sma(close, 3) OVER (
+SELECT round(ta_sma(close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
 ), 2) FROM ohlc;
@@ -43,7 +43,7 @@ NULL
 # With ROWS BETWEEN 2 PRECEDING AND CURRENT ROW, EMA(3) only gets 3 values per window.
 # TA-Lib EMA with period=3 on 3 values outputs 1 value (the SMA of the first period).
 query R
-SELECT round(taw_ema(close, 3) OVER (
+SELECT round(ta_ema(close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
 ), 2) FROM ohlc;
@@ -59,7 +59,7 @@ NULL
 
 # Test medprice (P6) as window function
 query R
-SELECT round(taw_medprice(high, low) OVER (
+SELECT round(ta_medprice(high, low) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlc;
@@ -75,7 +75,7 @@ SELECT round(taw_medprice(high, low) OVER (
 
 # Test typprice (P7) as window function
 query R
-SELECT round(taw_typprice(high, low, close) OVER (
+SELECT round(ta_typprice(high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlc;
@@ -91,7 +91,7 @@ SELECT round(taw_typprice(high, low, close) OVER (
 
 # Test avgprice (P5) as window function
 query R
-SELECT round(taw_avgprice(open, high, low, close) OVER (
+SELECT round(ta_avgprice(open, high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlc;

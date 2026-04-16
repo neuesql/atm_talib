@@ -1500,7 +1500,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP1Double<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::INTEGER}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1514,7 +1514,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP1Int<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::INTEGER}, \
                 LogicalType::INTEGER, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1528,7 +1528,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP2Double<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1542,7 +1542,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP2Int<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE}, \
                 LogicalType::INTEGER, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1556,7 +1556,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP3<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::INTEGER}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1570,7 +1570,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP4<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1584,7 +1584,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP5Double<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1598,7 +1598,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP5Int<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE}, \
                 LogicalType::INTEGER, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1612,7 +1612,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP6<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1626,7 +1626,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP7<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \
@@ -1640,7 +1640,7 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         { \
             using OP = TalibAggP8<ta_func>; \
             AggregateFunction func( \
-                "taw_" #sql_name, \
+                "ta_" #sql_name, \
                 {LogicalType::DOUBLE, LogicalType::DOUBLE, LogicalType::INTEGER}, \
                 LogicalType::DOUBLE, \
                 OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize, \

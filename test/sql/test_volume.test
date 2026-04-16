@@ -24,7 +24,7 @@ SELECT * FROM (VALUES
 
 # AD scalar: output length matches input length (no lookback)
 query I
-SELECT length(ta_ad(
+SELECT length(t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -35,7 +35,7 @@ SELECT length(ta_ad(
 
 # AD scalar: no NULL values (AD has zero lookback)
 query I
-SELECT ta_ad(
+SELECT t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -48,7 +48,7 @@ true
 # CLV = (2*102 - 95 - 105) / (105 - 95) = (204 - 200) / 10 = 0.4
 # AD[1] = 0.4 * 1000000 = 400000
 query R
-SELECT ta_ad(
+SELECT t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -59,12 +59,12 @@ SELECT ta_ad(
 
 # AD scalar: cumulative values grow when CLV is positive
 query I
-SELECT ta_ad(
+SELECT t_ad(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0, 120.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0, 115.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0],
     [1000000.0, 1200000.0, 900000.0, 1100000.0, 1300000.0, 1050000.0, 1400000.0, 1250000.0]
-)[8] > ta_ad(
+)[8] > t_ad(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0, 120.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0, 115.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0],
@@ -75,13 +75,13 @@ true
 
 # AD plain aggregate: returns the last AD value over all rows
 query R
-SELECT round(taw_ad(high, low, close, volume), 2) FROM ohlcv;
+SELECT round(ta_ad(high, low, close, volume), 2) FROM ohlcv;
 ----
 4209523.81
 
 # AD window function: expanding window accumulates AD from row 1
 query R
-SELECT round(taw_ad(high, low, close, volume) OVER (
+SELECT round(ta_ad(high, low, close, volume) OVER (
     ORDER BY date
     ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
 ), 2) FROM ohlcv;
@@ -97,7 +97,7 @@ SELECT round(taw_ad(high, low, close, volume) OVER (
 
 # AD window function: single-row window just gives each bar's own AD contribution
 query I
-SELECT taw_ad(high, low, close, volume) OVER (
+SELECT ta_ad(high, low, close, volume) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ) IS NOT NULL FROM ohlcv;

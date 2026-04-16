@@ -16,7 +16,7 @@ repo:
 docs:
   hello_world: |
     -- Moving averages and RSI on financial data
-    SELECT ta_sma([1.0, 2.0, 3.0, 4.0, 5.0], 3);
+    SELECT t_sma([1.0, 2.0, 3.0, 4.0, 5.0], 3);
   extended_description: |
     100+ TA-Lib technical analysis indicators as native DuckDB functions.
     Includes momentum (RSI, MACD, Stochastic), overlap studies (SMA, EMA, BBANDS),
@@ -24,5 +24,5 @@ docs:
     cycle indicators, and math/statistics functions.
 
     Functions are available in two modes:
-    - Scalar (ta_* prefix): operate on pre-collected lists
-    - Window/Aggregate (taw_* prefix): use OVER() for row-by-row computation
+    - Scalar (t_* prefix): operate on pre-collected lists
+    - Window/Aggregate (ta_* prefix): use OVER() for row-by-row computation

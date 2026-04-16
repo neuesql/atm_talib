@@ -23,36 +23,36 @@ SELECT * FROM (VALUES
 
 # RSI scalar: output length matches input length
 query I
-SELECT length(ta_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5));
+SELECT length(t_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5));
 ----
 10
 
 # RSI scalar: first (period) elements are NULL, rest are computed
 query I
-SELECT ta_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[1] IS NULL;
+SELECT t_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[1] IS NULL;
 ----
 true
 
 query I
-SELECT ta_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[6] IS NOT NULL;
+SELECT t_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[6] IS NOT NULL;
 ----
 true
 
 # RSI scalar: check a known value (period=5 on standard close prices)
 query R
-SELECT round(ta_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[6], 4);
+SELECT round(t_rsi([102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0, 119.0, 121.0, 118.0], 5)[6], 4);
 ----
 92.8571
 
 # RSI plain aggregate (no OVER): returns single value from all rows
 query R
-SELECT round(taw_rsi(close, 3), 4) FROM ohlc;
+SELECT round(ta_rsi(close, 3), 4) FROM ohlc;
 ----
 97.2603
 
 # RSI window function with period=3, window size=6
 query R
-SELECT round(taw_rsi(close, 3) OVER (
+SELECT round(ta_rsi(close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 5 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlc;
@@ -72,7 +72,7 @@ NULL
 
 # WILLR scalar: output length matches input length
 query I
-SELECT length(ta_willr(
+SELECT length(t_willr(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -83,7 +83,7 @@ SELECT length(ta_willr(
 
 # WILLR scalar: first (period-1) elements are NULL
 query I
-SELECT ta_willr(
+SELECT t_willr(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -94,7 +94,7 @@ true
 
 # WILLR scalar: period-th element is not NULL
 query I
-SELECT ta_willr(
+SELECT t_willr(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -105,7 +105,7 @@ true
 
 # WILLR scalar: values should be in range [-100, 0]
 query I
-SELECT ta_willr(
+SELECT t_willr(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -116,13 +116,13 @@ true
 
 # WILLR plain aggregate: returns single scalar from all rows
 query R
-SELECT round(taw_willr(high, low, close, 3), 4) FROM ohlc;
+SELECT round(ta_willr(high, low, close, 3), 4) FROM ohlc;
 ----
 -10.0
 
 # WILLR window function with period=3, window size=5
 query R
-SELECT round(taw_willr(high, low, close, 3) OVER (
+SELECT round(ta_willr(high, low, close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlc;
@@ -142,7 +142,7 @@ NULL
 
 # CCI scalar: output length matches input length
 query I
-SELECT length(ta_cci(
+SELECT length(t_cci(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -153,7 +153,7 @@ SELECT length(ta_cci(
 
 # CCI scalar: first (period-1) elements are NULL
 query I
-SELECT ta_cci(
+SELECT t_cci(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -164,7 +164,7 @@ true
 
 # CCI scalar: period-th element is not NULL
 query I
-SELECT ta_cci(
+SELECT t_cci(
     [105.0, 108.0, 110.0, 112.0, 115.0, 116.0, 118.0],
     [95.0,  100.0, 101.0, 104.0, 109.0, 110.0, 112.0],
     [102.0, 107.0, 106.0, 111.0, 113.0, 114.0, 117.0],
@@ -175,13 +175,13 @@ true
 
 # CCI plain aggregate: returns single scalar from all rows
 query R
-SELECT round(taw_cci(high, low, close, 3), 4) FROM ohlc;
+SELECT round(ta_cci(high, low, close, 3), 4) FROM ohlc;
 ----
 100.0
 
 # CCI window function with period=3, window size=5
 query R
-SELECT round(taw_cci(high, low, close, 3) OVER (
+SELECT round(ta_cci(high, low, close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlc;

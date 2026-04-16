@@ -1,5 +1,5 @@
 # name: test/sql/test_scalar.test
-# description: Tests for scalar (ta_) and window (taw_) variants across multiple patterns (P3-P8)
+# description: Tests for scalar (t_) and window (ta_) variants across multiple patterns (P3-P8)
 # group: [talib]
 
 require talib
@@ -21,7 +21,7 @@ SELECT * FROM (VALUES
 
 # ATR scalar: correct output length
 query I
-SELECT length(ta_atr(
+SELECT length(t_atr(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     [102.0, 107.0, 106.0, 111.0, 113.0],
@@ -32,7 +32,7 @@ SELECT length(ta_atr(
 
 # ATR scalar: first (period) elements are NULL
 query I
-SELECT ta_atr(
+SELECT t_atr(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     [102.0, 107.0, 106.0, 111.0, 113.0],
@@ -43,7 +43,7 @@ true
 
 # ATR scalar: (period+1)-th element is computed
 query R
-SELECT round(ta_atr(
+SELECT round(t_atr(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     [102.0, 107.0, 106.0, 111.0, 113.0],
@@ -54,7 +54,7 @@ SELECT round(ta_atr(
 
 # ATR window function: period=3, window=5
 query R
-SELECT round(taw_atr(high, low, close, 3) OVER (
+SELECT round(ta_atr(high, low, close, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlcv;
@@ -67,7 +67,7 @@ NULL
 
 # ATR plain aggregate: returns last ATR value over all rows
 query R
-SELECT round(taw_atr(high, low, close, 3), 4) FROM ohlcv;
+SELECT round(ta_atr(high, low, close, 3), 4) FROM ohlcv;
 ----
 6.4444
 
@@ -78,7 +78,7 @@ SELECT round(taw_atr(high, low, close, 3), 4) FROM ohlcv;
 
 # AD scalar: output length equals input length (zero lookback)
 query I
-SELECT length(ta_ad(
+SELECT length(t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -89,7 +89,7 @@ SELECT length(ta_ad(
 
 # AD scalar: no NULL values
 query I
-SELECT ta_ad(
+SELECT t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -101,7 +101,7 @@ true
 # AD scalar: first element calculation
 # CLV = (2*102 - 95 - 105) / (105 - 95) = 4/10 = 0.4 → AD = 0.4 * 1000000
 query R
-SELECT ta_ad(
+SELECT t_ad(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0],
@@ -112,7 +112,7 @@ SELECT ta_ad(
 
 # AD window function: expanding window
 query R
-SELECT round(taw_ad(high, low, close, volume) OVER (
+SELECT round(ta_ad(high, low, close, volume) OVER (
     ORDER BY date
     ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
 ), 2) FROM ohlcv;
@@ -130,7 +130,7 @@ SELECT round(taw_ad(high, low, close, volume) OVER (
 
 # AVGPRICE scalar: no lookback, all values computed
 query I
-SELECT ta_avgprice(
+SELECT t_avgprice(
     [100.0, 102.0, 107.0],
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
@@ -141,7 +141,7 @@ true
 
 # AVGPRICE scalar: (open + high + low + close) / 4
 query R
-SELECT ta_avgprice(
+SELECT t_avgprice(
     [100.0, 102.0, 107.0],
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
@@ -151,7 +151,7 @@ SELECT ta_avgprice(
 100.5
 
 query R
-SELECT ta_avgprice(
+SELECT t_avgprice(
     [100.0, 102.0, 107.0],
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
@@ -162,7 +162,7 @@ SELECT ta_avgprice(
 
 # AVGPRICE window function: single-row window gives each bar's average price
 query R
-SELECT round(taw_avgprice(open, high, low, close) OVER (
+SELECT round(ta_avgprice(open, high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlcv;
@@ -175,7 +175,7 @@ SELECT round(taw_avgprice(open, high, low, close) OVER (
 
 # AVGPRICE plain aggregate: returns the last AVGPRICE value
 query R
-SELECT round(taw_avgprice(open, high, low, close), 2) FROM ohlcv;
+SELECT round(ta_avgprice(open, high, low, close), 2) FROM ohlcv;
 ----
 112.0
 
@@ -186,7 +186,7 @@ SELECT round(taw_avgprice(open, high, low, close), 2) FROM ohlcv;
 
 # CDLDOJI scalar: doji candles (open == close) all detected
 query I
-SELECT ta_cdldoji(
+SELECT t_cdldoji(
     [100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0],
@@ -197,7 +197,7 @@ SELECT ta_cdldoji(
 
 # CDLDOJI window function: per-row doji check
 query I
-SELECT taw_cdldoji(open, high, low, close) OVER (
+SELECT ta_cdldoji(open, high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ) FROM ohlcv;
@@ -215,7 +215,7 @@ SELECT taw_cdldoji(open, high, low, close) OVER (
 
 # MEDPRICE scalar: no lookback, all values computed
 query R
-SELECT ta_medprice(
+SELECT t_medprice(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0]
 );
@@ -224,7 +224,7 @@ SELECT ta_medprice(
 
 # MEDPRICE window function: single-row window gives each bar's midpoint
 query R
-SELECT round(taw_medprice(high, low) OVER (
+SELECT round(ta_medprice(high, low) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlcv;
@@ -242,7 +242,7 @@ SELECT round(taw_medprice(high, low) OVER (
 
 # TRANGE scalar: first element is NULL (1-bar lookback)
 query I
-SELECT ta_trange(
+SELECT t_trange(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0]
@@ -252,7 +252,7 @@ true
 
 # TRANGE scalar: subsequent values are the true range
 query R
-SELECT ta_trange(
+SELECT t_trange(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0]
@@ -262,7 +262,7 @@ SELECT ta_trange(
 
 # TRANGE window function: 2-row window returns last bar's true range
 query R
-SELECT round(taw_trange(high, low, close) OVER (
+SELECT round(ta_trange(high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlcv;
@@ -275,7 +275,7 @@ NULL
 
 # TYPPRICE scalar: no lookback, all values computed
 query R
-SELECT round(ta_typprice(
+SELECT round(t_typprice(
     [105.0, 108.0, 110.0],
     [95.0,  100.0, 101.0],
     [102.0, 107.0, 106.0]
@@ -285,7 +285,7 @@ SELECT round(ta_typprice(
 
 # TYPPRICE window function: single-row window
 query R
-SELECT round(taw_typprice(high, low, close) OVER (
+SELECT round(ta_typprice(high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ), 2) FROM ohlcv;
@@ -303,7 +303,7 @@ SELECT round(taw_typprice(high, low, close) OVER (
 
 # MIDPRICE scalar: correct output length
 query I
-SELECT length(ta_midprice(
+SELECT length(t_midprice(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3
@@ -313,7 +313,7 @@ SELECT length(ta_midprice(
 
 # MIDPRICE scalar: first (period-1) elements are NULL
 query I
-SELECT ta_midprice(
+SELECT t_midprice(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3
@@ -323,7 +323,7 @@ true
 
 # MIDPRICE scalar: values are average of high/low max/min over the period
 query R
-SELECT ta_midprice(
+SELECT t_midprice(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3
@@ -333,13 +333,13 @@ SELECT ta_midprice(
 
 # MIDPRICE plain aggregate: returns last MIDPRICE value
 query R
-SELECT round(taw_midprice(high, low, 3), 4) FROM ohlcv;
+SELECT round(ta_midprice(high, low, 3), 4) FROM ohlcv;
 ----
 109.5
 
 # MIDPRICE window function: period=3, window=3
 query R
-SELECT round(taw_midprice(high, low, 3) OVER (
+SELECT round(ta_midprice(high, low, 3) OVER (
     ORDER BY date
     ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
 ), 4) FROM ohlcv;
@@ -352,7 +352,7 @@ NULL
 
 # PLUS_DM scalar: directional movement values
 query I
-SELECT length(ta_plus_dm(
+SELECT length(t_plus_dm(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3
@@ -361,7 +361,7 @@ SELECT length(ta_plus_dm(
 5
 
 query I
-SELECT ta_plus_dm(
+SELECT t_plus_dm(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3
@@ -370,7 +370,7 @@ SELECT ta_plus_dm(
 true
 
 query R
-SELECT round(ta_plus_dm(
+SELECT round(t_plus_dm(
     [105.0, 108.0, 110.0, 112.0, 115.0],
     [95.0,  100.0, 101.0, 104.0, 109.0],
     3

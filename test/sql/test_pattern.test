@@ -25,7 +25,7 @@ SELECT * FROM (VALUES
 
 # CDLDOJI scalar: output length matches input length (no lookback)
 query I
-SELECT length(ta_cdldoji(
+SELECT length(t_cdldoji(
     [100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0],
@@ -36,7 +36,7 @@ SELECT length(ta_cdldoji(
 
 # CDLDOJI scalar: exact doji candles (open == close) should all be detected
 query I
-SELECT ta_cdldoji(
+SELECT t_cdldoji(
     [100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0],
@@ -46,7 +46,7 @@ SELECT ta_cdldoji(
 100
 
 query I
-SELECT ta_cdldoji(
+SELECT t_cdldoji(
     [100.0, 100.0, 100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0,  90.0,  90.0],
@@ -57,7 +57,7 @@ SELECT ta_cdldoji(
 
 # CDLDOJI scalar: non-doji candle (open far from close) returns 0
 query I
-SELECT ta_cdldoji(
+SELECT t_cdldoji(
     [100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0],
@@ -68,7 +68,7 @@ SELECT ta_cdldoji(
 
 # CDLDOJI scalar: returns LIST<INTEGER> type (check element is integer-valued)
 query I
-SELECT ta_cdldoji(
+SELECT t_cdldoji(
     [100.0, 100.0, 100.0],
     [110.0, 110.0, 110.0],
     [90.0,  90.0,  90.0],
@@ -79,13 +79,13 @@ true
 
 # CDLDOJI plain aggregate: detects pattern in all rows of the table
 query I
-SELECT taw_cdldoji(open, high, low, close) FROM ohlc;
+SELECT ta_cdldoji(open, high, low, close) FROM ohlc;
 ----
 0
 
 # CDLDOJI window function: single-row window — non-doji candles return 0
 query I
-SELECT taw_cdldoji(open, high, low, close) OVER (
+SELECT ta_cdldoji(open, high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN CURRENT ROW AND CURRENT ROW
 ) FROM ohlc;
@@ -108,7 +108,7 @@ SELECT taw_cdldoji(open, high, low, close) OVER (
 
 # CDLHAMMER scalar: output length matches input length
 query I
-SELECT length(ta_cdlhammer(
+SELECT length(t_cdlhammer(
     [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
     [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
     [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
@@ -119,7 +119,7 @@ SELECT length(ta_cdlhammer(
 
 # CDLHAMMER scalar: first element is NULL (1-bar lookback)
 query I
-SELECT ta_cdlhammer(
+SELECT t_cdlhammer(
     [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
     [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
     [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
@@ -130,7 +130,7 @@ true
 
 # CDLHAMMER scalar: remaining elements are computed (not NULL)
 query I
-SELECT ta_cdlhammer(
+SELECT t_cdlhammer(
     [120.0, 115.0, 110.0, 105.0, 100.0, 99.5],
     [121.0, 116.0, 111.0, 106.0, 101.0, 101.0],
     [119.0, 114.0, 109.0, 104.0, 85.0,  88.0],
@@ -141,13 +141,13 @@ true
 
 # CDLHAMMER plain aggregate: standard OHLC data, no hammer detected
 query I
-SELECT taw_cdlhammer(open, high, low, close) FROM ohlc;
+SELECT ta_cdlhammer(open, high, low, close) FROM ohlc;
 ----
 0
 
 # CDLHAMMER window function: large window — CDLHAMMER returns NULL only for first bar
 query I
-SELECT taw_cdlhammer(open, high, low, close) OVER (
+SELECT ta_cdlhammer(open, high, low, close) OVER (
     ORDER BY date
     ROWS BETWEEN 7 PRECEDING AND CURRENT ROW
 ) FROM ohlc;
@@ -168,7 +168,7 @@ NULL
 
 # CDLENGULFING scalar: output length matches input length
 query I
-SELECT length(ta_cdlengulfing(
+SELECT length(t_cdlengulfing(
     [105.0, 100.0, 103.0],
     [106.0, 101.0, 108.0],
     [98.0,  95.0,  99.0],
@@ -179,7 +179,7 @@ SELECT length(ta_cdlengulfing(
 
 # CDLENGULFING scalar: first two elements are NULL (2-bar lookback)
 query I
-SELECT ta_cdlengulfing(
+SELECT t_cdlengulfing(
     [105.0, 100.0, 103.0],
     [106.0, 101.0, 108.0],
     [98.0,  95.0,  99.0],
@@ -189,7 +189,7 @@ SELECT ta_cdlengulfing(
 true
 
 query I
-SELECT ta_cdlengulfing(
+SELECT t_cdlengulfing(
     [105.0, 100.0, 103.0],
     [106.0, 101.0, 108.0],
     [98.0,  95.0,  99.0],
@@ -200,7 +200,7 @@ true
 
 # CDLENGULFING scalar: result values are 100, -100, or 0
 query I
-SELECT ta_cdlengulfing(
+SELECT t_cdlengulfing(
     [105.0, 100.0, 103.0],
     [106.0, 101.0, 108.0],
     [98.0,  95.0,  99.0],

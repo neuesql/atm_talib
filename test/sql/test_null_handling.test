@@ -6,25 +6,25 @@ require talib
 
 # NULL list input — scalar function returns NULL for NULL list
 query I
-SELECT ta_sma(NULL::DOUBLE[], 3);
+SELECT t_sma(NULL::DOUBLE[], 3);
 ----
 NULL
 
 # Single element, period > 1 — insufficient data, returns [NULL]
 query I
-SELECT ta_sma([42.0], 3);
+SELECT t_sma([42.0], 3);
 ----
 [NULL]
 
 # Period = 1 — TA-Lib SMA(1) with lookback 0; current implementation
 # returns NULLs for all elements (known behaviour)
 query I
-SELECT ta_sma([1.0, 2.0, 3.0], 1);
+SELECT t_sma([1.0, 2.0, 3.0], 1);
 ----
 [NULL, NULL, NULL]
 
 # NULL period — propagates NULL through the function
 query I
-SELECT ta_sma([1.0, 2.0, 3.0], NULL);
+SELECT t_sma([1.0, 2.0, 3.0], NULL);
 ----
 NULL

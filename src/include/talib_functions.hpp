@@ -2,7 +2,7 @@
 // This file has NO include guards — it is included multiple times with different macro definitions.
 //
 // Format: TALIB_FUNC(sql_name, ta_func, ta_lookback, pattern, return_type)
-//   sql_name    — lowercase name used in SQL as ta_<sql_name>
+//   sql_name    — lowercase name used in SQL as t_<sql_name> (scalar form)
 //   ta_func     — TA-Lib C function name (e.g. TA_SMA)
 //   ta_lookback — TA-Lib lookback function name (e.g. TA_SMA_Lookback)
 //   pattern     — P1..P8 (input signature pattern)
