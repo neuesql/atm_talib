@@ -9,6 +9,11 @@
 ## ⚡ Quick Install
 
 ```sql
+INSTALL talib FROM community;
+LOAD talib;
+
+# OR latest version
+
 INSTALL talib FROM 'https://neuesql.github.io/atm_talib';
 LOAD talib;
 ```
