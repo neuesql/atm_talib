@@ -20,10 +20,6 @@ LOAD talib;
 
 ## 🚀 Quick Start
 
-```sql
-LOAD talib;
-```
-
 Three ways to compute **SMA(14)** on `ohlc` — pick based on your needs:
 
 ```sql
