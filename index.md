@@ -307,161 +307,370 @@ Every indicator is available in two forms:
 
 ### Overlap Studies
 
-- **sma** — Simple Moving Average. $SMA = \frac{1}{n}\sum_{i=0}^{n-1} x_{t-i}$
-- **ema** — Exponential Moving Average. $EMA_t = \alpha \cdot x_t + (1 - \alpha) \cdot EMA_{t-1}$, where $\alpha = \frac{2}{n+1}$
-- **wma** — Weighted Moving Average. $WMA = \frac{\sum_{i=0}^{n-1}(n-i) \cdot x_{t-i}}{\sum_{i=1}^{n} i}$
-- **dema** — Double EMA. $DEMA = 2 \cdot EMA(x, n) - EMA(EMA(x, n), n)$
-- **tema** — Triple EMA. $TEMA = 3 \cdot E_1 - 3 \cdot E_2 + E_3$, where $E_1 = EMA$, $E_2 = EMA(E_1)$, $E_3 = EMA(E_2)$
-- **trima** — Triangular Moving Average. $TRIMA = SMA(SMA(x, m), m)$, where $m = \lceil(n+1)/2\rceil$
-- **kama** — Kaufman Adaptive MA. $KAMA_t = KAMA_{t-1} + SC^2 \cdot (x_t - KAMA_{t-1})$, where $SC = ER \cdot (\alpha_{fast} - \alpha_{slow}) + \alpha_{slow}$
-- **midpoint** — Midpoint over period. $MID = \frac{\max(x, n) + \min(x, n)}{2}$
-- **midprice** — Midpoint Price. $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$
+| **SMA** | Simple Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average) |
+|---|---|---|
+| $SMA = \frac{1}{n}\sum_{i=0}^{n-1} x_{t-i}$ |||
+
+| **EMA** | Exponential Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Exponential_smoothing) |
+|---|---|---|
+| $EMA_t = \alpha \cdot x_t + (1 - \alpha) \cdot EMA_{t-1}, \quad \alpha = \frac{2}{n+1}$ |||
+
+| **WMA** | Weighted Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Moving_average#Weighted_moving_average) |
+|---|---|---|
+| $WMA = \frac{\sum_{i=0}^{n-1}(n-i) \cdot x_{t-i}}{\sum_{i=1}^{n} i}$ |||
+
+| **DEMA** | Double Exponential Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Double_exponential_moving_average) |
+|---|---|---|
+| $DEMA = 2 \cdot EMA(x, n) - EMA(EMA(x, n), n)$ |||
+
+| **TEMA** | Triple Exponential Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Triple_exponential_moving_average) |
+|---|---|---|
+| $TEMA = 3E_1 - 3E_2 + E_3, \quad E_1 = EMA,\ E_2 = EMA(E_1),\ E_3 = EMA(E_2)$ |||
+
+| **TRIMA** | Triangular Moving Average | [Investopedia](https://www.investopedia.com/terms/t/triangularmoving-average.asp) |
+|---|---|---|
+| $TRIMA = SMA(SMA(x, m), m), \quad m = \lceil(n+1)/2\rceil$ |||
+
+| **KAMA** | Kaufman Adaptive Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/Kaufman%27s_Adaptive_Moving_Average) |
+|---|---|---|
+| $KAMA_t = KAMA_{t-1} + SC^2 \cdot (x_t - KAMA_{t-1}), \quad SC = ER \cdot (\alpha_f - \alpha_s) + \alpha_s$ |||
+
+| **MIDPOINT** | Midpoint over period | [TA-Lib docs](https://ta-lib.org/functions/midpoint/) |
+|---|---|---|
+| $MID = \frac{\max(x, n) + \min(x, n)}{2}$ |||
+
+| **MIDPRICE** | Midpoint Price over period | [TA-Lib docs](https://ta-lib.org/functions/midprice/) |
+|---|---|---|
+| $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$ |||
 
 ### Momentum Indicators
 
-- **rsi** — Relative Strength Index. $RSI = 100 - \frac{100}{1 + \frac{\overline{gain}}{\overline{loss}}}$
-- **cmo** — Chande Momentum Oscillator. $CMO = \frac{\sum up - \sum down}{\sum up + \sum down} \times 100$
-- **mom** — Momentum. $MOM = x_t - x_{t-n}$
-- **roc** — Rate of Change. $ROC = \frac{x_t - x_{t-n}}{x_{t-n}} \times 100$
-- **rocp** — Rate of Change Percentage. $ROCP = \frac{x_t - x_{t-n}}{x_{t-n}}$
-- **rocr** — Rate of Change Ratio. $ROCR = \frac{x_t}{x_{t-n}}$
-- **rocr100** — Rate of Change Ratio x100. $ROCR100 = \frac{x_t}{x_{t-n}} \times 100$
-- **trix** — Triple Smooth EMA ROC. $TRIX = \frac{E_3(t) - E_3(t-1)}{E_3(t-1)} \times 100$, where $E_3 = EMA(EMA(EMA(x)))$
-- **willr** — Williams %R. $\%R = \frac{H_n - C}{H_n - L_n} \times (-100)$
-- **cci** — Commodity Channel Index. $CCI = \frac{TP - SMA(TP, n)}{0.015 \cdot MD}$, where $TP = \frac{H+L+C}{3}$
-- **adx** — Average Directional Index. $ADX = SMA(DX, n)$
-- **adxr** — ADX Rating. $ADXR = \frac{ADX_t + ADX_{t-n}}{2}$
-- **dx** — Directional Movement Index. $DX = \frac{|+DI - (-DI)|}{+DI + (-DI)} \times 100$
-- **plus_di** — Plus Directional Indicator. $+DI = \frac{Smooth(+DM, n)}{ATR(n)} \times 100$
-- **minus_di** — Minus Directional Indicator. $-DI = \frac{Smooth(-DM, n)}{ATR(n)} \times 100$
-- **plus_dm** — Plus Directional Movement. $+DM = H_t - H_{t-1}$ if $> 0$ and $> (L_{t-1} - L_t)$, else $0$
-- **minus_dm** — Minus Directional Movement. $-DM = L_{t-1} - L_t$ if $> 0$ and $> (H_t - H_{t-1})$, else $0$
+| **RSI** | Relative Strength Index | [Wikipedia](https://en.wikipedia.org/wiki/Relative_strength_index) |
+|---|---|---|
+| $RSI = 100 - \frac{100}{1 + \frac{\overline{gain}}{\overline{loss}}}$ |||
+
+| **CMO** | Chande Momentum Oscillator | [Investopedia](https://www.investopedia.com/terms/c/chandemomentumoscillator.asp) |
+|---|---|---|
+| $CMO = \frac{\sum up - \sum down}{\sum up + \sum down} \times 100$ |||
+
+| **MOM** | Momentum | [Investopedia](https://www.investopedia.com/terms/m/momentum.asp) |
+|---|---|---|
+| $MOM = x_t - x_{t-n}$ |||
+
+| **ROC** | Rate of Change | [Wikipedia](https://en.wikipedia.org/wiki/Momentum_(technical_analysis)) |
+|---|---|---|
+| $ROC = \frac{x_t - x_{t-n}}{x_{t-n}} \times 100$ |||
+
+| **ROCP** | Rate of Change (Percentage) | [TA-Lib docs](https://ta-lib.org/functions/rocp/) |
+|---|---|---|
+| $ROCP = \frac{x_t - x_{t-n}}{x_{t-n}}$ |||
+
+| **ROCR** | Rate of Change (Ratio) | [TA-Lib docs](https://ta-lib.org/functions/rocr/) |
+|---|---|---|
+| $ROCR = \frac{x_t}{x_{t-n}}$ |||
+
+| **ROCR100** | Rate of Change (Ratio x100) | [TA-Lib docs](https://ta-lib.org/functions/rocr100/) |
+|---|---|---|
+| $ROCR100 = \frac{x_t}{x_{t-n}} \times 100$ |||
+
+| **TRIX** | Triple Smooth EMA Rate of Change | [Wikipedia](https://en.wikipedia.org/wiki/Trix_(technical_analysis)) |
+|---|---|---|
+| $TRIX = \frac{E_3(t) - E_3(t-1)}{E_3(t-1)} \times 100, \quad E_3 = EMA(EMA(EMA(x)))$ |||
+
+| **WILLR** | Williams %R | [Wikipedia](https://en.wikipedia.org/wiki/Williams_%25R) |
+|---|---|---|
+| $\%R = \frac{H_n - C}{H_n - L_n} \times (-100)$ |||
+
+| **CCI** | Commodity Channel Index | [Wikipedia](https://en.wikipedia.org/wiki/Commodity_channel_index) |
+|---|---|---|
+| $CCI = \frac{TP - SMA(TP, n)}{0.015 \cdot MD}, \quad TP = \frac{H+L+C}{3}$ |||
+
+| **ADX** | Average Directional Index | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $ADX = SMA(DX, n)$ |||
+
+| **ADXR** | Average Directional Movement Rating | [Investopedia](https://www.investopedia.com/terms/a/adxr.asp) |
+|---|---|---|
+| $ADXR = \frac{ADX_t + ADX_{t-n}}{2}$ |||
+
+| **DX** | Directional Movement Index | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $DX = \frac{|+DI - (-DI)|}{+DI + (-DI)} \times 100$ |||
+
+| **PLUS_DI** | Plus Directional Indicator | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $+DI = \frac{Smooth(+DM, n)}{ATR(n)} \times 100$ |||
+
+| **MINUS_DI** | Minus Directional Indicator | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $-DI = \frac{Smooth(-DM, n)}{ATR(n)} \times 100$ |||
+
+| **PLUS_DM** | Plus Directional Movement | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $+DM = H_t - H_{t-1} \text{ if } > 0 \text{ and } > (L_{t-1} - L_t), \text{ else } 0$ |||
+
+| **MINUS_DM** | Minus Directional Movement | [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index) |
+|---|---|---|
+| $-DM = L_{t-1} - L_t \text{ if } > 0 \text{ and } > (H_t - H_{t-1}), \text{ else } 0$ |||
 
 ### Volume Indicators
 
-- **ad** — Chaikin A/D Line. $AD = \sum \frac{(C - L) - (H - C)}{H - L} \times V$
+| **AD** | Chaikin A/D Line | [Wikipedia](https://en.wikipedia.org/wiki/Accumulation/distribution_index) |
+|---|---|---|
+| $AD = \sum \frac{(C - L) - (H - C)}{H - L} \times V$ |||
 
 ### Volatility
 
-- **atr** — Average True Range. $ATR = \frac{1}{n}\sum_{i=1}^{n} TR_i$ (Wilder smoothing)
-- **natr** — Normalized ATR. $NATR = \frac{ATR}{C} \times 100$
-- **trange** — True Range. $TR = \max(H - L,\ |H - C_{t-1}|,\ |L - C_{t-1}|)$
+| **ATR** | Average True Range | [Wikipedia](https://en.wikipedia.org/wiki/Average_true_range) |
+|---|---|---|
+| $ATR = Wilder\_Smooth(TR, n)$ |||
+
+| **NATR** | Normalized Average True Range | [Investopedia](https://www.investopedia.com/terms/a/atr.asp) |
+|---|---|---|
+| $NATR = \frac{ATR}{C} \times 100$ |||
+
+| **TRANGE** | True Range | [Wikipedia](https://en.wikipedia.org/wiki/Average_true_range) |
+|---|---|---|
+| $TR = \max(H - L,\ \|H - C_{t-1}\|,\ \|L - C_{t-1}\|)$ |||
 
 ### Price Transform
 
-- **avgprice** — Average Price. $AVGPRICE = \frac{O + H + L + C}{4}$
-- **bop** — Balance of Power. $BOP = \frac{C - O}{H - L}$
-- **medprice** — Median Price. $MEDPRICE = \frac{H + L}{2}$
-- **typprice** — Typical Price. $TYPPRICE = \frac{H + L + C}{3}$
-- **wclprice** — Weighted Close. $WCLPRICE = \frac{H + L + 2C}{4}$
+| **AVGPRICE** | Average Price | [TA-Lib docs](https://ta-lib.org/functions/avgprice/) |
+|---|---|---|
+| $AVGPRICE = \frac{O + H + L + C}{4}$ |||
+
+| **BOP** | Balance of Power | [Investopedia](https://www.investopedia.com/terms/b/balanceofpower.asp) |
+|---|---|---|
+| $BOP = \frac{C - O}{H - L}$ |||
+
+| **MEDPRICE** | Median Price | [TA-Lib docs](https://ta-lib.org/functions/medprice/) |
+|---|---|---|
+| $MEDPRICE = \frac{H + L}{2}$ |||
+
+| **TYPPRICE** | Typical Price | [Wikipedia](https://en.wikipedia.org/wiki/Typical_price) |
+|---|---|---|
+| $TYPPRICE = \frac{H + L + C}{3}$ |||
+
+| **WCLPRICE** | Weighted Close Price | [TA-Lib docs](https://ta-lib.org/functions/wclprice/) |
+|---|---|---|
+| $WCLPRICE = \frac{H + L + 2C}{4}$ |||
 
 ### Cycle Indicators
 
-- **ht_dcperiod** — Dominant Cycle Period. Hilbert Transform extracts the dominant cycle length from price data.
-- **ht_dcphase** — Dominant Cycle Phase. Phase angle $\phi$ of the dominant cycle in degrees.
-- **ht_trendline** — Instantaneous Trendline. Hilbert-smoothed trend component of the price series.
-- **ht_trendmode** — Trend vs Cycle Mode. Returns $1$ if trending, $0$ if in cycle mode.
+| **HT_DCPERIOD** | Dominant Cycle Period | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| Hilbert Transform extracts dominant cycle length from price data |||
+
+| **HT_DCPHASE** | Dominant Cycle Phase | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| Phase angle $\phi$ of the dominant cycle in degrees |||
+
+| **HT_TRENDLINE** | Instantaneous Trendline | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| Hilbert-smoothed trend component of the price series |||
+
+| **HT_TRENDMODE** | Trend vs Cycle Mode | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| Returns $1$ if trending, $0$ if in cycle mode |||
 
 ### Statistics
 
-- **linearreg** — Linear Regression. $y = b_0 + b_1 \cdot t$, returns endpoint $\hat{y}_t$
-- **linearreg_angle** — Linear Regression Angle. $\theta = \arctan(b_1)$ in degrees
-- **linearreg_intercept** — Linear Regression Intercept. $b_0$ of best-fit line $y = b_0 + b_1 t$
-- **linearreg_slope** — Linear Regression Slope. $b_1 = \frac{n\sum ty - \sum t \sum y}{n\sum t^2 - (\sum t)^2}$
-- **tsf** — Time Series Forecast. $TSF = b_0 + b_1 \cdot (n + 1)$ (projects one period ahead)
-- **sum** — Rolling Sum. $SUM = \sum_{i=0}^{n-1} x_{t-i}$
-- **max** — Highest Value. $MAX = \max(x_{t}, x_{t-1}, \ldots, x_{t-n+1})$
-- **min** — Lowest Value. $MIN = \min(x_{t}, x_{t-1}, \ldots, x_{t-n+1})$
-- **maxindex** — Index of Highest. Position $i$ where $x_i = \max(x)$ within the window.
-- **minindex** — Index of Lowest. Position $i$ where $x_i = \min(x)$ within the window.
+| **LINEARREG** | Linear Regression | [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression) |
+|---|---|---|
+| $\hat{y}_t = b_0 + b_1 \cdot t$ (endpoint of best-fit line) |||
+
+| **LINEARREG_ANGLE** | Linear Regression Angle | [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression) |
+|---|---|---|
+| $\theta = \arctan(b_1) \text{ in degrees}$ |||
+
+| **LINEARREG_INTERCEPT** | Linear Regression Intercept | [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression) |
+|---|---|---|
+| $b_0$ of best-fit line $y = b_0 + b_1 t$ |||
+
+| **LINEARREG_SLOPE** | Linear Regression Slope | [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression) |
+|---|---|---|
+| $b_1 = \frac{n\sum ty - \sum t \sum y}{n\sum t^2 - (\sum t)^2}$ |||
+
+| **TSF** | Time Series Forecast | [Investopedia](https://www.investopedia.com/terms/t/time-series-forecast.asp) |
+|---|---|---|
+| $TSF = b_0 + b_1 \cdot (n + 1)$ (one period ahead projection) |||
+
+| **SUM** | Rolling Summation | [TA-Lib docs](https://ta-lib.org/functions/sum/) |
+|---|---|---|
+| $SUM = \sum_{i=0}^{n-1} x_{t-i}$ |||
+
+| **MAX** | Highest Value over period | [TA-Lib docs](https://ta-lib.org/functions/max/) |
+|---|---|---|
+| $MAX = \max(x_t, x_{t-1}, \ldots, x_{t-n+1})$ |||
+
+| **MIN** | Lowest Value over period | [TA-Lib docs](https://ta-lib.org/functions/min/) |
+|---|---|---|
+| $MIN = \min(x_t, x_{t-1}, \ldots, x_{t-n+1})$ |||
+
+| **MAXINDEX** | Index of Highest Value | [TA-Lib docs](https://ta-lib.org/functions/maxindex/) |
+|---|---|---|
+| Position $i$ where $x_i = \max(x)$ within the window |||
+
+| **MININDEX** | Index of Lowest Value | [TA-Lib docs](https://ta-lib.org/functions/minindex/) |
+|---|---|---|
+| Position $i$ where $x_i = \min(x)$ within the window |||
 
 ### Math Transform
 
-- **acos** — Arc Cosine. $y = \cos^{-1}(x)$
-- **asin** — Arc Sine. $y = \sin^{-1}(x)$
-- **atan** — Arc Tangent. $y = \tan^{-1}(x)$
-- **ceil** — Ceiling. $y = \lceil x \rceil$
-- **cos** — Cosine. $y = \cos(x)$
-- **cosh** — Hyperbolic Cosine. $y = \cosh(x) = \frac{e^x + e^{-x}}{2}$
-- **exp** — Exponential. $y = e^x$
-- **floor** — Floor. $y = \lfloor x \rfloor$
-- **ln** — Natural Logarithm. $y = \ln(x)$
-- **log10** — Base-10 Logarithm. $y = \log_{10}(x)$
-- **sin** — Sine. $y = \sin(x)$
-- **sinh** — Hyperbolic Sine. $y = \sinh(x) = \frac{e^x - e^{-x}}{2}$
-- **sqrt** — Square Root. $y = \sqrt{x}$
-- **tan** — Tangent. $y = \tan(x)$
-- **tanh** — Hyperbolic Tangent. $y = \tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$
+| **ACOS** | Arc Cosine | [Wikipedia](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) |
+|---|---|---|
+| $y = \cos^{-1}(x)$ |||
+
+| **ASIN** | Arc Sine | [Wikipedia](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) |
+|---|---|---|
+| $y = \sin^{-1}(x)$ |||
+
+| **ATAN** | Arc Tangent | [Wikipedia](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) |
+|---|---|---|
+| $y = \tan^{-1}(x)$ |||
+
+| **CEIL** | Ceiling | [Wikipedia](https://en.wikipedia.org/wiki/Floor_and_ceiling_functions) |
+|---|---|---|
+| $y = \lceil x \rceil$ |||
+
+| **COS** | Cosine | [Wikipedia](https://en.wikipedia.org/wiki/Trigonometric_functions) |
+|---|---|---|
+| $y = \cos(x)$ |||
+
+| **COSH** | Hyperbolic Cosine | [Wikipedia](https://en.wikipedia.org/wiki/Hyperbolic_functions) |
+|---|---|---|
+| $y = \cosh(x) = \frac{e^x + e^{-x}}{2}$ |||
+
+| **EXP** | Exponential | [Wikipedia](https://en.wikipedia.org/wiki/Exponential_function) |
+|---|---|---|
+| $y = e^x$ |||
+
+| **FLOOR** | Floor | [Wikipedia](https://en.wikipedia.org/wiki/Floor_and_ceiling_functions) |
+|---|---|---|
+| $y = \lfloor x \rfloor$ |||
+
+| **LN** | Natural Logarithm | [Wikipedia](https://en.wikipedia.org/wiki/Natural_logarithm) |
+|---|---|---|
+| $y = \ln(x)$ |||
+
+| **LOG10** | Base-10 Logarithm | [Wikipedia](https://en.wikipedia.org/wiki/Common_logarithm) |
+|---|---|---|
+| $y = \log_{10}(x)$ |||
+
+| **SIN** | Sine | [Wikipedia](https://en.wikipedia.org/wiki/Trigonometric_functions) |
+|---|---|---|
+| $y = \sin(x)$ |||
+
+| **SINH** | Hyperbolic Sine | [Wikipedia](https://en.wikipedia.org/wiki/Hyperbolic_functions) |
+|---|---|---|
+| $y = \sinh(x) = \frac{e^x - e^{-x}}{2}$ |||
+
+| **SQRT** | Square Root | [Wikipedia](https://en.wikipedia.org/wiki/Square_root) |
+|---|---|---|
+| $y = \sqrt{x}$ |||
+
+| **TAN** | Tangent | [Wikipedia](https://en.wikipedia.org/wiki/Trigonometric_functions) |
+|---|---|---|
+| $y = \tan(x)$ |||
+
+| **TANH** | Hyperbolic Tangent | [Wikipedia](https://en.wikipedia.org/wiki/Hyperbolic_functions) |
+|---|---|---|
+| $y = \tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ |||
 
 ### Pattern Recognition
 
-All candlestick patterns take $(O, H, L, C)$ and return $+100$ (bullish), $-100$ (bearish), or $0$ (no pattern).
+All candlestick patterns take $(O, H, L, C)$ and return $+100$ (bullish), $-100$ (bearish), or $0$ (no pattern). See [Candlestick pattern (Wikipedia)](https://en.wikipedia.org/wiki/Candlestick_pattern).
 
-- **cdl2crows** — Two Crows: bearish reversal, two black candles gapping above uptrend
-- **cdl3blackcrows** — Three Black Crows: three consecutive long bearish candles
-- **cdl3inside** — Three Inside Up/Down: reversal confirmed by third candle breaking first's range
-- **cdl3linestrike** — Three-Line Strike: three same-direction candles then a strike candle
-- **cdl3outside** — Three Outside Up/Down: engulfing pattern confirmed by third candle
-- **cdl3starsinsouth** — Three Stars In The South: three declining bearish candles, shrinking bodies
-- **cdl3whitesoldiers** — Three White Soldiers: three consecutive long bullish candles
-- **cdladvanceblock** — Advance Block: three bullish candles with shrinking bodies
-- **cdlbelthold** — Belt-hold: long candle opening at its extreme
-- **cdlbreakaway** — Breakaway: gap then three candles, reversal closing the gap
-- **cdlclosingmarubozu** — Closing Marubozu: no shadow on the closing side
-- **cdlconcealbabyswall** — Concealing Baby Swallow: four-candle bearish pattern
-- **cdlcounterattack** — Counterattack: two opposite candles with same close
-- **cdldoji** — Doji: $|O - C| \approx 0$
-- **cdldojistar** — Doji Star: doji gapping from previous candle
-- **cdldragonflydoji** — Dragonfly Doji: doji with long lower shadow, no upper
-- **cdlengulfing** — Engulfing: second body fully contains the first
-- **cdlgapsidesidewhite** — Gap Side-by-Side White: two similar white candles after gap
-- **cdlgravestonedoji** — Gravestone Doji: doji with long upper shadow, no lower
-- **cdlhammer** — Hammer: small body at top, lower shadow $\geq 2 \times$ body
-- **cdlhangingman** — Hanging Man: hammer in uptrend (bearish)
-- **cdlharami** — Harami: second candle contained within first's body
-- **cdlharamicross** — Harami Cross: harami where second candle is a doji
-- **cdlhighwave** — High-Wave Candle: very long shadows, small body
-- **cdlhikkake** — Hikkake: inside bar breakout failure
-- **cdlhikkakemod** — Modified Hikkake: confirmed by subsequent price action
-- **cdlhomingpigeon** — Homing Pigeon: two bearish, second inside first (bullish)
-- **cdlidentical3crows** — Identical Three Crows: each opens at prior close
-- **cdlinneck** — In-Neck: small bullish closing near prior low
-- **cdlinvertedhammer** — Inverted Hammer: small body at bottom, long upper shadow
-- **cdlkicking** — Kicking: two opposing marubozu with gap
-- **cdlkickingbylength** — Kicking by Length: direction by longer marubozu
-- **cdlladderbottom** — Ladder Bottom: four bearish then bullish reversal
-- **cdllongleggeddoji** — Long Legged Doji: very long both shadows
-- **cdllongline** — Long Line Candle: unusually long body
-- **cdlmarubozu** — Marubozu: no shadows (pure body)
-- **cdlmatchinglow** — Matching Low: two bearish with same close
-- **cdlonneck** — On-Neck: bullish closing exactly at prior low
-- **cdlpiercing** — Piercing: bullish closing above midpoint of prior bearish
-- **cdlrickshawman** — Rickshaw Man: long-legged doji, body at center
-- **cdlrisefall3methods** — Rising/Falling Three Methods: continuation pattern
-- **cdlseparatinglines** — Separating Lines: opposite candles, same open
-- **cdlshootingstar** — Shooting Star: inverted hammer in uptrend
-- **cdlshortline** — Short Line Candle: unusually short body
-- **cdlspinningtop** — Spinning Top: small body with both shadows
-- **cdlstalledpattern** — Stalled Pattern: three bullish, third small (slowing)
-- **cdlsticksandwich** — Stick Sandwich: same-close candles sandwiching opposite
-- **cdltakuri** — Takuri: doji with very long lower shadow
-- **cdltasukigap** — Tasuki Gap: gap then partial-fill candle (continuation)
-- **cdlthrusting** — Thrusting: bullish closing below midpoint of prior bearish
-- **cdltristar** — Tristar: three dojis with middle gapping
-- **cdlunique3river** — Unique 3 River: three-candle bullish reversal
-- **cdlupsidegap2crows** — Upside Gap Two Crows: two bearish gapping above uptrend
-- **cdlxsidegap3methods** — Gap Three Methods: opposite candle closing the gap
+| Function | Description | Reference |
+|----------|-------------|-----------|
+| **CDL2CROWS** | Two Crows: bearish reversal, two black candles gapping above uptrend | [Investopedia](https://www.investopedia.com/terms/t/twocrows.asp) |
+| **CDL3BLACKCROWS** | Three Black Crows: three consecutive long bearish candles | [Wikipedia](https://en.wikipedia.org/wiki/Three_black_crows) |
+| **CDL3INSIDE** | Three Inside Up/Down: reversal confirmed by third candle | [Investopedia](https://www.investopedia.com/terms/t/three-inside-updown.asp) |
+| **CDL3LINESTRIKE** | Three-Line Strike: three same-direction then strike candle | [Investopedia](https://www.investopedia.com/terms/t/three-line-strike.asp) |
+| **CDL3OUTSIDE** | Three Outside Up/Down: engulfing confirmed by third candle | [Investopedia](https://www.investopedia.com/terms/t/three-outside-updown.asp) |
+| **CDL3STARSINSOUTH** | Three Stars In The South: declining bearish, shrinking bodies | [Investopedia](https://www.investopedia.com/terms/t/three-stars-south.asp) |
+| **CDL3WHITESOLDIERS** | Three White Soldiers: three consecutive long bullish candles | [Wikipedia](https://en.wikipedia.org/wiki/Three_white_soldiers) |
+| **CDLADVANCEBLOCK** | Advance Block: three bullish with shrinking bodies | [Investopedia](https://www.investopedia.com/terms/a/advance-block.asp) |
+| **CDLBELTHOLD** | Belt-hold: long candle opening at its extreme | [Investopedia](https://www.investopedia.com/terms/b/belt-hold.asp) |
+| **CDLBREAKAWAY** | Breakaway: gap then reversal closing the gap | [Investopedia](https://www.investopedia.com/terms/b/breakaway-gap.asp) |
+| **CDLCLOSINGMARUBOZU** | Closing Marubozu: no shadow on closing side | [Investopedia](https://www.investopedia.com/terms/m/marubozu.asp) |
+| **CDLCONCEALBABYSWALL** | Concealing Baby Swallow: four-candle bearish pattern | [Investopedia](https://www.investopedia.com/terms/c/concealing-baby-swallow.asp) |
+| **CDLCOUNTERATTACK** | Counterattack: two opposite candles, same close | [Investopedia](https://www.investopedia.com/terms/c/counterattack.asp) |
+| **CDLDOJI** | Doji: $\|O - C\| \approx 0$ | [Wikipedia](https://en.wikipedia.org/wiki/Doji) |
+| **CDLDOJISTAR** | Doji Star: doji gapping from previous candle | [Investopedia](https://www.investopedia.com/terms/d/doji.asp) |
+| **CDLDRAGONFLYDOJI** | Dragonfly Doji: long lower shadow, no upper | [Investopedia](https://www.investopedia.com/terms/d/dragonfly-doji.asp) |
+| **CDLENGULFING** | Engulfing: second body fully contains first | [Wikipedia](https://en.wikipedia.org/wiki/Engulfing_pattern) |
+| **CDLGAPSIDESIDEWHITE** | Gap Side-by-Side White: two similar candles after gap | [Investopedia](https://www.investopedia.com/terms/u/upside-gap-two-crows.asp) |
+| **CDLGRAVESTONEDOJI** | Gravestone Doji: long upper shadow, no lower | [Investopedia](https://www.investopedia.com/terms/g/gravestone-doji.asp) |
+| **CDLHAMMER** | Hammer: small body, lower shadow $\geq 2\times$ body | [Wikipedia](https://en.wikipedia.org/wiki/Hammer_(candlestick_pattern)) |
+| **CDLHANGINGMAN** | Hanging Man: hammer in uptrend (bearish) | [Wikipedia](https://en.wikipedia.org/wiki/Hanging_man_(candlestick_pattern)) |
+| **CDLHARAMI** | Harami: second candle inside first's body | [Wikipedia](https://en.wikipedia.org/wiki/Harami_(candlestick_pattern)) |
+| **CDLHARAMICROSS** | Harami Cross: harami where second is doji | [Investopedia](https://www.investopedia.com/terms/h/haramicross.asp) |
+| **CDLHIGHWAVE** | High-Wave Candle: very long shadows, small body | [Investopedia](https://www.investopedia.com/terms/l/long-legged-doji.asp) |
+| **CDLHIKKAKE** | Hikkake: inside bar breakout failure | [Investopedia](https://www.investopedia.com/terms/h/hikkakepattern.asp) |
+| **CDLHIKKAKEMOD** | Modified Hikkake: confirmed by subsequent action | [Investopedia](https://www.investopedia.com/terms/h/hikkakepattern.asp) |
+| **CDLHOMINGPIGEON** | Homing Pigeon: two bearish, second inside first | [Investopedia](https://www.investopedia.com/terms/h/homing-pigeon.asp) |
+| **CDLIDENTICAL3CROWS** | Identical Three Crows: each opens at prior close | [Investopedia](https://www.investopedia.com/terms/i/identical-three-crows.asp) |
+| **CDLINNECK** | In-Neck: small bullish closing near prior low | [Investopedia](https://www.investopedia.com/terms/i/inneck-pattern.asp) |
+| **CDLINVERTEDHAMMER** | Inverted Hammer: small body, long upper shadow | [Investopedia](https://www.investopedia.com/terms/i/invertedhammer.asp) |
+| **CDLKICKING** | Kicking: two opposing marubozu with gap | [Investopedia](https://www.investopedia.com/terms/k/kicking-pattern.asp) |
+| **CDLKICKINGBYLENGTH** | Kicking by Length: direction by longer marubozu | [Investopedia](https://www.investopedia.com/terms/k/kicking-pattern.asp) |
+| **CDLLADDERBOTTOM** | Ladder Bottom: four bearish then bullish reversal | [Investopedia](https://www.investopedia.com/terms/l/ladder-bottom.asp) |
+| **CDLLONGLEGGEDDOJI** | Long Legged Doji: very long both shadows | [Investopedia](https://www.investopedia.com/terms/l/long-legged-doji.asp) |
+| **CDLLONGLINE** | Long Line Candle: unusually long body | [Investopedia](https://www.investopedia.com/terms/l/long-line-candle.asp) |
+| **CDLMARUBOZU** | Marubozu: no shadows (pure body) | [Investopedia](https://www.investopedia.com/terms/m/marubozu.asp) |
+| **CDLMATCHINGLOW** | Matching Low: two bearish with same close | [Investopedia](https://www.investopedia.com/terms/m/matching-low.asp) |
+| **CDLONNECK** | On-Neck: bullish closing at prior low | [Investopedia](https://www.investopedia.com/terms/o/on-neck-pattern.asp) |
+| **CDLPIERCING** | Piercing: bullish closing above midpoint of prior bearish | [Wikipedia](https://en.wikipedia.org/wiki/Piercing_pattern) |
+| **CDLRICKSHAWMAN** | Rickshaw Man: long-legged doji, body at center | [Investopedia](https://www.investopedia.com/terms/r/rickshaw-man.asp) |
+| **CDLRISEFALL3METHODS** | Rising/Falling Three Methods: continuation pattern | [Wikipedia](https://en.wikipedia.org/wiki/Rising_three_methods) |
+| **CDLSEPARATINGLINES** | Separating Lines: opposite candles, same open | [Investopedia](https://www.investopedia.com/terms/s/separating-lines.asp) |
+| **CDLSHOOTINGSTAR** | Shooting Star: inverted hammer in uptrend | [Wikipedia](https://en.wikipedia.org/wiki/Shooting_star_(candlestick_pattern)) |
+| **CDLSHORTLINE** | Short Line Candle: unusually short body | [Investopedia](https://www.investopedia.com/terms/s/short-line-candle.asp) |
+| **CDLSPINNINGTOP** | Spinning Top: small body with both shadows | [Wikipedia](https://en.wikipedia.org/wiki/Spinning_top_(candlestick_pattern)) |
+| **CDLSTALLEDPATTERN** | Stalled Pattern: three bullish, third small | [Investopedia](https://www.investopedia.com/terms/s/stalled-pattern.asp) |
+| **CDLSTICKSANDWICH** | Stick Sandwich: same-close sandwiching opposite | [Investopedia](https://www.investopedia.com/terms/s/stick-sandwich.asp) |
+| **CDLTAKURI** | Takuri: doji with very long lower shadow | [Investopedia](https://www.investopedia.com/terms/t/takuri.asp) |
+| **CDLTASUKIGAP** | Tasuki Gap: partial-fill candle after gap | [Investopedia](https://www.investopedia.com/terms/t/tasuki-gap.asp) |
+| **CDLTHRUSTING** | Thrusting: bullish closing below midpoint of prior | [Investopedia](https://www.investopedia.com/terms/t/thrusting-pattern.asp) |
+| **CDLTRISTAR** | Tristar: three dojis with middle gapping | [Investopedia](https://www.investopedia.com/terms/t/tristar.asp) |
+| **CDLUNIQUE3RIVER** | Unique 3 River: three-candle bullish reversal | [Investopedia](https://www.investopedia.com/terms/u/unique-three-river.asp) |
+| **CDLUPSIDEGAP2CROWS** | Upside Gap Two Crows: two bearish gapping above | [Investopedia](https://www.investopedia.com/terms/u/upside-gap-two-crows.asp) |
+| **CDLXSIDEGAP3METHODS** | Gap Three Methods: opposite candle closing gap | [Investopedia](https://www.investopedia.com/terms/u/updown-gap-sidebyside-white-lines.asp) |
 
 ### Multi-Output
 
-- **macd** — MACD. $MACD = EMA(x, f) - EMA(x, s)$; $Signal = EMA(MACD, p)$; $Hist = MACD - Signal$
-- **bbands** — Bollinger Bands. $Mid = SMA(x, n)$; $Upper = Mid + k\sigma$; $Lower = Mid - k\sigma$
-- **stoch** — Stochastic. $\%K = \frac{C - L_n}{H_n - L_n} \times 100$; $\%D = SMA(\%K)$
-- **aroon** — Aroon. $Up = \frac{n - \text{bars since } H_n}{n} \times 100$; $Down = \frac{n - \text{bars since } L_n}{n} \times 100$
-- **minmax** — Min/Max. $\min(x_{t-n+1}, \ldots, x_t)$ and $\max(x_{t-n+1}, \ldots, x_t)$ in single pass
-- **mama** — MESA Adaptive MA. Phase-adaptive MA: $MAMA_t = MAMA_{t-1} + \alpha_t(x_t - MAMA_{t-1})$
-- **ht_phasor** — Hilbert Phasor. In-phase $I$ and quadrature $Q$ components of dominant cycle.
-- **ht_sine** — Hilbert SineWave. $\sin(\phi)$ and $\sin(\phi + \pi/4)$ of dominant cycle phase $\phi$.
+| **MACD** | Moving Average Convergence/Divergence | [Wikipedia](https://en.wikipedia.org/wiki/MACD) |
+|---|---|---|
+| $MACD = EMA(x, f) - EMA(x, s); \quad Signal = EMA(MACD, p); \quad Hist = MACD - Signal$ |||
+
+| **BBANDS** | Bollinger Bands | [Wikipedia](https://en.wikipedia.org/wiki/Bollinger_Bands) |
+|---|---|---|
+| $Mid = SMA(x, n); \quad Upper = Mid + k\sigma; \quad Lower = Mid - k\sigma$ |||
+
+| **STOCH** | Stochastic Oscillator | [Wikipedia](https://en.wikipedia.org/wiki/Stochastic_oscillator) |
+|---|---|---|
+| $\%K = \frac{C - L_n}{H_n - L_n} \times 100; \quad \%D = SMA(\%K)$ |||
+
+| **AROON** | Aroon Indicator | [Wikipedia](https://en.wikipedia.org/wiki/Aroon_indicator) |
+|---|---|---|
+| $Up = \frac{n - \text{bars since } H_n}{n} \times 100; \quad Down = \frac{n - \text{bars since } L_n}{n} \times 100$ |||
+
+| **MINMAX** | Min/Max over period | [TA-Lib docs](https://ta-lib.org/functions/minmax/) |
+|---|---|---|
+| $\min(x_{t-n+1}, \ldots, x_t)$ and $\max(x_{t-n+1}, \ldots, x_t)$ in single pass |||
+
+| **MAMA** | MESA Adaptive Moving Average | [Wikipedia](https://en.wikipedia.org/wiki/MESA_Adaptive_Moving_Average) |
+|---|---|---|
+| $MAMA_t = MAMA_{t-1} + \alpha_t(x_t - MAMA_{t-1}); \quad FAMA_t = FAMA_{t-1} + 0.5\alpha_t(MAMA_t - FAMA_{t-1})$ |||
+
+| **HT_PHASOR** | Hilbert Transform — Phasor | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| In-phase $I$ and quadrature $Q$ components of dominant cycle |||
+
+| **HT_SINE** | Hilbert Transform — SineWave | [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform) |
+|---|---|---|
+| $sine = \sin(\phi); \quad leadsine = \sin(\phi + \pi/4)$ where $\phi$ = dominant cycle phase |||
 
 ---
 
