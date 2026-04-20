@@ -12,11 +12,14 @@ void RegisterTalibScalarFunctions(ExtensionLoader &loader);
 void RegisterTalibAggregateFunctions(ExtensionLoader &loader);
 // Defined in talib_multi_output.cpp
 void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader);
+// Defined in talib_multi_output_agg.cpp
+void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader);
 
 static void LoadInternal(ExtensionLoader &loader) {
     RegisterTalibScalarFunctions(loader);
     RegisterTalibAggregateFunctions(loader);
     RegisterTalibMultiOutputFunctions(loader);
+    RegisterTalibMultiOutputAggFunctions(loader);
 }
 
 void TalibExtension::Load(ExtensionLoader &loader) {
