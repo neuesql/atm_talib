@@ -7,11 +7,13 @@ This extension wraps [TA-Lib](https://ta-lib.org/) technical analysis functions 
 Every indicator is available in two forms:
 
 - **Scalar** (`t_` prefix): accepts `LIST<DOUBLE>` inputs, returns a `LIST` of the same length (leading lookback positions are `NULL`).
-- **Window / Aggregate** (`ta_` prefix): accepts plain scalar columns and is used with a window `OVER (...)` clause, returning one `DOUBLE` per row.
+- **Window / Aggregate** (`ta_` prefix): accepts plain scalar columns and is used with a window `OVER (...)` clause, returning one value per row.
 
-### Return-type note for pattern recognition
+### Return-type notes
 
-Candlestick pattern functions return `LIST<INTEGER>` (scalar) or `INTEGER` (window). Values are `100` (bullish), `-100` (bearish), or `0` (no pattern).
+- Most functions return `DOUBLE`. Pattern recognition functions return `INTEGER` (`100` = bullish, `-100` = bearish, `0` = no pattern).
+- Multi-output window functions return `STRUCT` — access fields with dot notation: `ta_macd(...).macd`.
+- Multi-output scalar functions return `LIST<STRUCT>` — unpack with `unnest()`.
 
 ---
 
@@ -158,1024 +160,146 @@ Candlestick pattern functions return `LIST<INTEGER>` (scalar) or `INTEGER` (wind
 
 ---
 
-## Multi-Output Function Signatures
+## Function Signatures
 
 | # | Function | Signature | Return |
 |---|----------|-----------|--------|
-| 1 | `ta_macd` | (close DOUBLE, fast INT, slow INT, signal INT) | STRUCT(macd, signal, hist) |
-| 2 | `ta_bbands` | (close DOUBLE, period INT, devup DOUBLE, devdn DOUBLE, matype INT) | STRUCT(upper, middle, lower) |
-| 3 | `ta_stoch` | (high DOUBLE, low DOUBLE, close DOUBLE, fastK INT, slowK INT, slowKMA INT, slowD INT, slowDMA INT) | STRUCT(slowk, slowd) |
-| 4 | `ta_aroon` | (high DOUBLE, low DOUBLE, period INT) | STRUCT(aroon_down, aroon_up) |
-| 5 | `ta_minmax` | (close DOUBLE, period INT) | STRUCT(min, max) |
-| 6 | `ta_mama` | (close DOUBLE, fast_limit DOUBLE, slow_limit DOUBLE) | STRUCT(mama, fama) |
-| 7 | `ta_ht_phasor` | (close DOUBLE) | STRUCT(inphase, quadrature) |
-| 8 | `ta_ht_sine` | (close DOUBLE) | STRUCT(sine, leadsine) |
-
----
-
-## 1. Overlap Studies
-
-Moving averages and price-envelope indicators.
-
----
-
-### t_sma / ta_sma
-
-Simple Moving Average.
-
-**Scalar:** `t_sma(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_sma(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_ema / ta_ema
-
-Exponential Moving Average.
-
-**Scalar:** `t_ema(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_ema(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_wma / ta_wma
-
-Weighted Moving Average.
-
-**Scalar:** `t_wma(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_wma(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_dema / ta_dema
-
-Double Exponential Moving Average.
-
-**Scalar:** `t_dema(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_dema(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_tema / ta_tema
-
-Triple Exponential Moving Average.
-
-**Scalar:** `t_tema(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_tema(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_trima / ta_trima
-
-Triangular Moving Average.
-
-**Scalar:** `t_trima(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_trima(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_kama / ta_kama
-
-Kaufman Adaptive Moving Average.
-
-**Scalar:** `t_kama(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_kama(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_midpoint / ta_midpoint
-
-Midpoint over a rolling window: `(max + min) / 2` of the input series.
-
-**Scalar:** `t_midpoint(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_midpoint(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_midprice / ta_midprice
-
-Midpoint Price over a rolling window: `(highest_high + lowest_low) / 2`.
-
-**Scalar:** `t_midprice(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_midprice(high DOUBLE, low DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-## 2. Momentum Indicators
-
----
-
-### t_rsi / ta_rsi
-
-Relative Strength Index.
-
-**Scalar:** `t_rsi(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_rsi(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods (typically 14) |
-
----
-
-### t_cmo / ta_cmo
-
-Chande Momentum Oscillator.
-
-**Scalar:** `t_cmo(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_cmo(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_mom / ta_mom
-
-Momentum: current value minus value `time_period` bars ago.
-
-**Scalar:** `t_mom(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_mom(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Lookback period |
-
----
-
-### t_roc / ta_roc
-
-Rate of Change: `((price / prev_price) - 1) * 100`.
-
-**Scalar:** `t_roc(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_roc(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Lookback period |
-
----
-
-### t_rocp / ta_rocp
-
-Rate of Change Percentage: `(price - prev_price) / prev_price`.
-
-**Scalar:** `t_rocp(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_rocp(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Lookback period |
-
----
-
-### t_rocr / ta_rocr
-
-Rate of Change Ratio: `price / prev_price`.
-
-**Scalar:** `t_rocr(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_rocr(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Lookback period |
-
----
-
-### t_rocr100 / ta_rocr100
-
-Rate of Change Ratio ×100: `(price / prev_price) * 100`.
-
-**Scalar:** `t_rocr100(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_rocr100(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Lookback period |
-
----
-
-### t_trix / ta_trix
-
-1-day Rate-Of-Change of a Triple Smooth EMA.
-
-**Scalar:** `t_trix(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_trix(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_willr / ta_willr
-
-Williams' %R.
-
-**Scalar:** `t_willr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_willr(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods (typically 14) |
-
----
-
-### t_cci / ta_cci
-
-Commodity Channel Index.
-
-**Scalar:** `t_cci(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_cci(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods (typically 14) |
-
----
-
-### t_adx / ta_adx
-
-Average Directional Movement Index.
-
-**Scalar:** `t_adx(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_adx(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods (typically 14) |
-
----
-
-### t_adxr / ta_adxr
-
-Average Directional Movement Index Rating.
-
-**Scalar:** `t_adxr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_adxr(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_dx / ta_dx
-
-Directional Movement Index.
-
-**Scalar:** `t_dx(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_dx(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_plus_di / ta_plus_di
-
-Plus Directional Indicator (+DI).
-
-**Scalar:** `t_plus_di(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_plus_di(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_minus_di / ta_minus_di
-
-Minus Directional Indicator (-DI).
-
-**Scalar:** `t_minus_di(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_minus_di(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_plus_dm / ta_plus_dm
-
-Plus Directional Movement (+DM).
-
-**Scalar:** `t_plus_dm(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_plus_dm(high DOUBLE, low DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_minus_dm / ta_minus_dm
-
-Minus Directional Movement (-DM).
-
-**Scalar:** `t_minus_dm(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_minus_dm(high DOUBLE, low DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-## 3. Volume Indicators
-
----
-
-### t_ad / ta_ad
-
-Chaikin Accumulation/Distribution Line. No time period required.
-
-**Scalar:** `t_ad(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, volume LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_ad(high DOUBLE, low DOUBLE, close DOUBLE, volume DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| volume / volume | LIST\<DOUBLE\> / DOUBLE | Volume series |
-
----
-
-## 4. Volatility
-
----
-
-### t_atr / ta_atr
-
-Average True Range.
-
-**Scalar:** `t_atr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_atr(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods (typically 14) |
-
----
-
-### t_natr / ta_natr
-
-Normalized Average True Range (ATR as a percentage of close).
-
-**Scalar:** `t_natr(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_natr(high DOUBLE, low DOUBLE, close DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_trange / ta_trange
-
-True Range (single-period, no `time_period` parameter).
-
-**Scalar:** `t_trange(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_trange(high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high / high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low / low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close / close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-
----
-
-## 5. Pattern Recognition
-
-All candlestick functions take OHLC inputs and return `LIST<INTEGER>` (scalar) or `INTEGER` (window).  
-Return values: `100` = bullish signal, `-100` = bearish signal, `0` = no pattern.
-
-**Scalar signature:** `t_cdl<name>(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<INTEGER>`  
-**Window signature:** `ta_cdl<name>(open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> INTEGER`
-
-| Function | Description |
-|----------|-------------|
-| `t_cdl2crows` / `ta_cdl2crows` | Two Crows |
-| `t_cdl3blackcrows` / `ta_cdl3blackcrows` | Three Black Crows |
-| `t_cdl3inside` / `ta_cdl3inside` | Three Inside Up/Down |
-| `t_cdl3linestrike` / `ta_cdl3linestrike` | Three-Line Strike |
-| `t_cdl3outside` / `ta_cdl3outside` | Three Outside Up/Down |
-| `t_cdl3starsinsouth` / `ta_cdl3starsinsouth` | Three Stars In The South |
-| `t_cdl3whitesoldiers` / `ta_cdl3whitesoldiers` | Three Advancing White Soldiers |
-| `t_cdladvanceblock` / `ta_cdladvanceblock` | Advance Block |
-| `t_cdlbelthold` / `ta_cdlbelthold` | Belt-hold |
-| `t_cdlbreakaway` / `ta_cdlbreakaway` | Breakaway |
-| `t_cdlclosingmarubozu` / `ta_cdlclosingmarubozu` | Closing Marubozu |
-| `t_cdlconcealbabyswall` / `ta_cdlconcealbabyswall` | Concealing Baby Swallow |
-| `t_cdlcounterattack` / `ta_cdlcounterattack` | Counterattack |
-| `t_cdldoji` / `ta_cdldoji` | Doji |
-| `t_cdldojistar` / `ta_cdldojistar` | Doji Star |
-| `t_cdldragonflydoji` / `ta_cdldragonflydoji` | Dragonfly Doji |
-| `t_cdlengulfing` / `ta_cdlengulfing` | Engulfing Pattern |
-| `t_cdlgapsidesidewhite` / `ta_cdlgapsidesidewhite` | Up/Down-gap Side-by-Side White Lines |
-| `t_cdlgravestonedoji` / `ta_cdlgravestonedoji` | Gravestone Doji |
-| `t_cdlhammer` / `ta_cdlhammer` | Hammer |
-| `t_cdlhangingman` / `ta_cdlhangingman` | Hanging Man |
-| `t_cdlharami` / `ta_cdlharami` | Harami Pattern |
-| `t_cdlharamicross` / `ta_cdlharamicross` | Harami Cross Pattern |
-| `t_cdlhighwave` / `ta_cdlhighwave` | High-Wave Candle |
-| `t_cdlhikkake` / `ta_cdlhikkake` | Hikkake Pattern |
-| `t_cdlhikkakemod` / `ta_cdlhikkakemod` | Modified Hikkake Pattern |
-| `t_cdlhomingpigeon` / `ta_cdlhomingpigeon` | Homing Pigeon |
-| `t_cdlidentical3crows` / `ta_cdlidentical3crows` | Identical Three Crows |
-| `t_cdlinneck` / `ta_cdlinneck` | In-Neck Pattern |
-| `t_cdlinvertedhammer` / `ta_cdlinvertedhammer` | Inverted Hammer |
-| `t_cdlkicking` / `ta_cdlkicking` | Kicking |
-| `t_cdlkickingbylength` / `ta_cdlkickingbylength` | Kicking — bull/bear determined by the longer marubozu |
-| `t_cdlladderbottom` / `ta_cdlladderbottom` | Ladder Bottom |
-| `t_cdllongleggeddoji` / `ta_cdllongleggeddoji` | Long Legged Doji |
-| `t_cdllongline` / `ta_cdllongline` | Long Line Candle |
-| `t_cdlmarubozu` / `ta_cdlmarubozu` | Marubozu |
-| `t_cdlmatchinglow` / `ta_cdlmatchinglow` | Matching Low |
-| `t_cdlonneck` / `ta_cdlonneck` | On-Neck Pattern |
-| `t_cdlpiercing` / `ta_cdlpiercing` | Piercing Pattern |
-| `t_cdlrickshawman` / `ta_cdlrickshawman` | Rickshaw Man |
-| `t_cdlrisefall3methods` / `ta_cdlrisefall3methods` | Rising/Falling Three Methods |
-| `t_cdlseparatinglines` / `ta_cdlseparatinglines` | Separating Lines |
-| `t_cdlshootingstar` / `ta_cdlshootingstar` | Shooting Star |
-| `t_cdlshortline` / `ta_cdlshortline` | Short Line Candle |
-| `t_cdlspinningtop` / `ta_cdlspinningtop` | Spinning Top |
-| `t_cdlstalledpattern` / `ta_cdlstalledpattern` | Stalled Pattern |
-| `t_cdlsticksandwich` / `ta_cdlsticksandwich` | Stick Sandwich |
-| `t_cdltakuri` / `ta_cdltakuri` | Takuri (Dragonfly Doji with very long lower shadow) |
-| `t_cdltasukigap` / `ta_cdltasukigap` | Tasuki Gap |
-| `t_cdlthrusting` / `ta_cdlthrusting` | Thrusting Pattern |
-| `t_cdltristar` / `ta_cdltristar` | Tristar Pattern |
-| `t_cdlunique3river` / `ta_cdlunique3river` | Unique 3 River |
-| `t_cdlupsidegap2crows` / `ta_cdlupsidegap2crows` | Upside Gap Two Crows |
-| `t_cdlxsidegap3methods` / `ta_cdlxsidegap3methods` | Upside/Downside Gap Three Methods |
-
----
-
-## 6. Price Transform
-
-Functions that transform OHLC prices into a single series. No `time_period` parameter.
-
----
-
-### t_avgprice / ta_avgprice
-
-Average Price: `(open + high + low + close) / 4`.
-
-**Scalar:** `t_avgprice(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_avgprice(open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| open | LIST\<DOUBLE\> / DOUBLE | Open price series |
-| high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-
----
-
-### t_bop / ta_bop
-
-Balance of Power: `(close - open) / (high - low)`.
-
-**Scalar:** `t_bop(open LIST<DOUBLE>, high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_bop(open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| open | LIST\<DOUBLE\> / DOUBLE | Open price series |
-| high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-
----
-
-### t_medprice / ta_medprice
-
-Median Price: `(high + low) / 2`.
-
-**Scalar:** `t_medprice(high LIST<DOUBLE>, low LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_medprice(high DOUBLE, low DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-
----
-
-### t_typprice / ta_typprice
-
-Typical Price: `(high + low + close) / 3`.
-
-**Scalar:** `t_typprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_typprice(high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-
----
-
-### t_wclprice / ta_wclprice
-
-Weighted Close Price: `(high + low + close * 2) / 4`.
-
-**Scalar:** `t_wclprice(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_wclprice(high DOUBLE, low DOUBLE, close DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| high | LIST\<DOUBLE\> / DOUBLE | High price series |
-| low | LIST\<DOUBLE\> / DOUBLE | Low price series |
-| close | LIST\<DOUBLE\> / DOUBLE | Close price series |
-
----
-
-## 7. Cycle Indicators
-
-Hilbert Transform-based cycle analysis functions. No `time_period` parameter.
-
----
-
-### t_ht_dcperiod / ta_ht_dcperiod
-
-Hilbert Transform — Dominant Cycle Period.
-
-**Scalar:** `t_ht_dcperiod(prices LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_ht_dcperiod(price DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series (typically close) |
-
----
-
-### t_ht_dcphase / ta_ht_dcphase
-
-Hilbert Transform — Dominant Cycle Phase.
-
-**Scalar:** `t_ht_dcphase(prices LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_ht_dcphase(price DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series (typically close) |
-
----
-
-### t_ht_trendline / ta_ht_trendline
-
-Hilbert Transform — Instantaneous Trendline.
-
-**Scalar:** `t_ht_trendline(prices LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window:** `ta_ht_trendline(price DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series (typically close) |
-
----
-
-### t_ht_trendmode / ta_ht_trendmode
-
-Hilbert Transform — Trend vs Cycle Mode. Returns `1` (trending) or `0` (cycling).
-
-**Scalar:** `t_ht_trendmode(prices LIST<DOUBLE>) -> LIST<INTEGER>`  
-**Window:** `ta_ht_trendmode(price DOUBLE) OVER (...) -> INTEGER`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series (typically close) |
-
----
-
-## 8. Statistics
-
----
-
-### t_linearreg / ta_linearreg
-
-Linear Regression: endpoint value of the linear regression line.
-
-**Scalar:** `t_linearreg(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_linearreg(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_linearreg_angle / ta_linearreg_angle
-
-Linear Regression Angle (degrees).
-
-**Scalar:** `t_linearreg_angle(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_linearreg_angle(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_linearreg_intercept / ta_linearreg_intercept
-
-Linear Regression Intercept.
-
-**Scalar:** `t_linearreg_intercept(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_linearreg_intercept(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_linearreg_slope / ta_linearreg_slope
-
-Linear Regression Slope.
-
-**Scalar:** `t_linearreg_slope(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_linearreg_slope(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_tsf / ta_tsf
-
-Time Series Forecast (next value projected by linear regression).
-
-**Scalar:** `t_tsf(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_tsf(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_sum / ta_sum
-
-Rolling Sum.
-
-**Scalar:** `t_sum(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_sum(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_max / ta_max
-
-Highest value over a rolling window.
-
-**Scalar:** `t_max(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_max(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_min / ta_min
-
-Lowest value over a rolling window.
-
-**Scalar:** `t_min(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<DOUBLE>`  
-**Window:** `ta_min(price DOUBLE, time_period INTEGER) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_maxindex / ta_maxindex
-
-Index of highest value over a rolling window.
-
-**Scalar:** `t_maxindex(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<INTEGER>`  
-**Window:** `ta_maxindex(price DOUBLE, time_period INTEGER) OVER (...) -> INTEGER`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-### t_minindex / ta_minindex
-
-Index of lowest value over a rolling window.
-
-**Scalar:** `t_minindex(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<INTEGER>`  
-**Window:** `ta_minindex(price DOUBLE, time_period INTEGER) OVER (...) -> INTEGER`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices / price | LIST\<DOUBLE\> / DOUBLE | Input price series |
-| time_period | INTEGER | Number of periods |
-
----
-
-## 9. Math Transform
-
-Element-wise mathematical functions. No `time_period` parameter.
-
-| Function | Description |
-|----------|-------------|
-| `t_acos` / `ta_acos` | Arc Cosine |
-| `t_asin` / `ta_asin` | Arc Sine |
-| `t_atan` / `ta_atan` | Arc Tangent |
-| `t_ceil` / `ta_ceil` | Ceiling |
-| `t_cos` / `ta_cos` | Cosine |
-| `t_cosh` / `ta_cosh` | Hyperbolic Cosine |
-| `t_exp` / `ta_exp` | Exponential (`e^x`) |
-| `t_floor` / `ta_floor` | Floor |
-| `t_ln` / `ta_ln` | Natural Logarithm |
-| `t_log10` / `ta_log10` | Base-10 Logarithm |
-| `t_sin` / `ta_sin` | Sine |
-| `t_sinh` / `ta_sinh` | Hyperbolic Sine |
-| `t_sqrt` / `ta_sqrt` | Square Root |
-| `t_tan` / `ta_tan` | Tangent |
-| `t_tanh` / `ta_tanh` | Hyperbolic Tangent |
-
-**Scalar signature:** `t_<fn>(values LIST<DOUBLE>) -> LIST<DOUBLE>`  
-**Window signature:** `ta_<fn>(value DOUBLE) OVER (...) -> DOUBLE`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| values / value | LIST\<DOUBLE\> / DOUBLE | Input series |
-
----
-
-## 10. Multi-Output Functions
-
-These functions return multiple named output fields per computation.
-
-- **Scalar** (`t_` prefix): returns `LIST<STRUCT>` — one struct per input element.
-- **Window** (`ta_` prefix): returns `STRUCT` — one struct per row, use with `OVER (...)`. Access fields with dot notation: `ta_macd(...).macd`.
-
----
-
-### t_macd / ta_macd
-
-Moving Average Convergence/Divergence.
-
-**Scalar:** `t_macd(prices LIST<DOUBLE>, fast_period INTEGER, slow_period INTEGER, signal_period INTEGER) -> LIST<STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)>`  
-**Window:** `ta_macd(price DOUBLE, fast_period INTEGER, slow_period INTEGER, signal_period INTEGER) OVER (...) -> STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)`
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| prices | LIST\<DOUBLE\> | — | Input price series |
-| fast_period | INTEGER | 12 | Fast EMA period |
-| slow_period | INTEGER | 26 | Slow EMA period |
-| signal_period | INTEGER | 9 | Signal EMA period |
-
-**Output fields:** `macd`, `signal`, `hist`
-
-**Example:**
-```sql
-SELECT unnest(t_macd(list(close ORDER BY ts), 12, 26, 9))
-FROM prices
-GROUP BY symbol;
-```
-
----
-
-### t_bbands / ta_bbands
-
-Bollinger Bands.
-
-**Scalar:** `t_bbands(prices LIST<DOUBLE>, time_period INTEGER, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INTEGER) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`  
-**Window:** `ta_bbands(price DOUBLE, time_period INTEGER, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INTEGER) OVER (...) -> STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)`
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| prices | LIST\<DOUBLE\> | — | Input price series |
-| time_period | INTEGER | 5 | Number of periods |
-| nb_dev_up | DOUBLE | 2.0 | Number of standard deviations for upper band |
-| nb_dev_dn | DOUBLE | 2.0 | Number of standard deviations for lower band |
-| ma_type | INTEGER | 0 | MA type (0=SMA, 1=EMA, 2=WMA, …) |
-
-**Output fields:** `upper`, `middle`, `lower`
-
-**Example:**
-```sql
-SELECT unnest(t_bbands(list(close ORDER BY ts), 20, 2.0, 2.0, 0))
-FROM prices
-GROUP BY symbol;
-```
-
----
-
-### t_stoch / ta_stoch
-
-Stochastic Oscillator.
-
-**Scalar:** `t_stoch(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, fastk_period INTEGER, slowk_period INTEGER, slowk_matype INTEGER, slowd_period INTEGER, slowd_matype INTEGER) -> LIST<STRUCT(slowk DOUBLE, slowd DOUBLE)>`  
-**Window:** `ta_stoch(high DOUBLE, low DOUBLE, close DOUBLE, fastk_period INTEGER, slowk_period INTEGER, slowk_matype INTEGER, slowd_period INTEGER, slowd_matype INTEGER) OVER (...) -> STRUCT(slowk DOUBLE, slowd DOUBLE)`
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| high | LIST\<DOUBLE\> | — | High price series |
-| low | LIST\<DOUBLE\> | — | Low price series |
-| close | LIST\<DOUBLE\> | — | Close price series |
-| fastk_period | INTEGER | 5 | Fast %K period |
-| slowk_period | INTEGER | 3 | Slow %K smoothing period |
-| slowk_matype | INTEGER | 0 | Slow %K MA type |
-| slowd_period | INTEGER | 3 | Slow %D period |
-| slowd_matype | INTEGER | 0 | Slow %D MA type |
-
-**Output fields:** `slowk`, `slowd`
-
----
-
-### t_aroon / ta_aroon
-
-Aroon Indicator.
-
-**Scalar:** `t_aroon(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)>`  
-**Window:** `ta_aroon(high DOUBLE, low DOUBLE, time_period INTEGER) OVER (...) -> STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)`
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| high | LIST\<DOUBLE\> | — | High price series |
-| low | LIST\<DOUBLE\> | — | Low price series |
-| time_period | INTEGER | 14 | Number of periods |
-
-**Output fields:** `aroon_down`, `aroon_up`
-
----
-
-### t_minmax / ta_minmax
-
-Lowest and highest values over a rolling window in a single pass.
-
-**Scalar:** `t_minmax(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(min DOUBLE, max DOUBLE)>`  
-**Window:** `ta_minmax(price DOUBLE, time_period INTEGER) OVER (...) -> STRUCT(min DOUBLE, max DOUBLE)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices | LIST\<DOUBLE\> | Input price series |
-| time_period | INTEGER | Number of periods |
-
-**Output fields:** `min`, `max`
-
----
-
-### t_mama / ta_mama
-
-MESA Adaptive Moving Average.
-
-**Scalar:** `t_mama(prices LIST<DOUBLE>, fast_limit DOUBLE, slow_limit DOUBLE) -> LIST<STRUCT(mama DOUBLE, fama DOUBLE)>`  
-**Window:** `ta_mama(price DOUBLE, fast_limit DOUBLE, slow_limit DOUBLE) OVER (...) -> STRUCT(mama DOUBLE, fama DOUBLE)`
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| prices | LIST\<DOUBLE\> | — | Input price series |
-| fast_limit | DOUBLE | 0.5 | Upper limit for the adaptive factor |
-| slow_limit | DOUBLE | 0.05 | Lower limit for the adaptive factor |
-
-**Output fields:** `mama` (MESA Adaptive MA), `fama` (Following Adaptive MA)
-
----
-
-### t_ht_phasor / ta_ht_phasor
-
-Hilbert Transform — Phasor Components.
-
-**Scalar:** `t_ht_phasor(prices LIST<DOUBLE>) -> LIST<STRUCT(inphase DOUBLE, quadrature DOUBLE)>`  
-**Window:** `ta_ht_phasor(price DOUBLE) OVER (...) -> STRUCT(inphase DOUBLE, quadrature DOUBLE)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices | LIST\<DOUBLE\> | Input price series (typically close) |
-
-**Output fields:** `inphase`, `quadrature`
-
----
-
-### t_ht_sine / ta_ht_sine
-
-Hilbert Transform — SineWave Indicator.
-
-**Scalar:** `t_ht_sine(prices LIST<DOUBLE>) -> LIST<STRUCT(sine DOUBLE, leadsine DOUBLE)>`  
-**Window:** `ta_ht_sine(price DOUBLE) OVER (...) -> STRUCT(sine DOUBLE, leadsine DOUBLE)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| prices | LIST\<DOUBLE\> | Input price series (typically close) |
-
-**Output fields:** `sine`, `leadsine`
+| | **Overlap Studies** | | |
+| 1 | `t_sma` / `ta_sma` | (values, period) | DOUBLE |
+| 2 | `t_ema` / `ta_ema` | (values, period) | DOUBLE |
+| 3 | `t_wma` / `ta_wma` | (values, period) | DOUBLE |
+| 4 | `t_dema` / `ta_dema` | (values, period) | DOUBLE |
+| 5 | `t_tema` / `ta_tema` | (values, period) | DOUBLE |
+| 6 | `t_trima` / `ta_trima` | (values, period) | DOUBLE |
+| 7 | `t_kama` / `ta_kama` | (values, period) | DOUBLE |
+| 8 | `t_midpoint` / `ta_midpoint` | (values, period) | DOUBLE |
+| 9 | `t_midprice` / `ta_midprice` | (high, low, period) | DOUBLE |
+| | **Momentum Indicators** | | |
+| 10 | `t_rsi` / `ta_rsi` | (values, period) | DOUBLE |
+| 11 | `t_cmo` / `ta_cmo` | (values, period) | DOUBLE |
+| 12 | `t_mom` / `ta_mom` | (values, period) | DOUBLE |
+| 13 | `t_roc` / `ta_roc` | (values, period) | DOUBLE |
+| 14 | `t_rocp` / `ta_rocp` | (values, period) | DOUBLE |
+| 15 | `t_rocr` / `ta_rocr` | (values, period) | DOUBLE |
+| 16 | `t_rocr100` / `ta_rocr100` | (values, period) | DOUBLE |
+| 17 | `t_trix` / `ta_trix` | (values, period) | DOUBLE |
+| 18 | `t_willr` / `ta_willr` | (high, low, close, period) | DOUBLE |
+| 19 | `t_cci` / `ta_cci` | (high, low, close, period) | DOUBLE |
+| 20 | `t_adx` / `ta_adx` | (high, low, close, period) | DOUBLE |
+| 21 | `t_adxr` / `ta_adxr` | (high, low, close, period) | DOUBLE |
+| 22 | `t_dx` / `ta_dx` | (high, low, close, period) | DOUBLE |
+| 23 | `t_plus_di` / `ta_plus_di` | (high, low, close, period) | DOUBLE |
+| 24 | `t_minus_di` / `ta_minus_di` | (high, low, close, period) | DOUBLE |
+| 25 | `t_plus_dm` / `ta_plus_dm` | (high, low, period) | DOUBLE |
+| 26 | `t_minus_dm` / `ta_minus_dm` | (high, low, period) | DOUBLE |
+| | **Volume Indicators** | | |
+| 27 | `t_ad` / `ta_ad` | (high, low, close, volume) | DOUBLE |
+| | **Volatility** | | |
+| 28 | `t_atr` / `ta_atr` | (high, low, close, period) | DOUBLE |
+| 29 | `t_natr` / `ta_natr` | (high, low, close, period) | DOUBLE |
+| 30 | `t_trange` / `ta_trange` | (high, low, close) | DOUBLE |
+| | **Price Transform** | | |
+| 31 | `t_avgprice` / `ta_avgprice` | (open, high, low, close) | DOUBLE |
+| 32 | `t_bop` / `ta_bop` | (open, high, low, close) | DOUBLE |
+| 33 | `t_medprice` / `ta_medprice` | (high, low) | DOUBLE |
+| 34 | `t_typprice` / `ta_typprice` | (high, low, close) | DOUBLE |
+| 35 | `t_wclprice` / `ta_wclprice` | (high, low, close) | DOUBLE |
+| | **Cycle Indicators** | | |
+| 36 | `t_ht_dcperiod` / `ta_ht_dcperiod` | (values) | DOUBLE |
+| 37 | `t_ht_dcphase` / `ta_ht_dcphase` | (values) | DOUBLE |
+| 38 | `t_ht_trendline` / `ta_ht_trendline` | (values) | DOUBLE |
+| 39 | `t_ht_trendmode` / `ta_ht_trendmode` | (values) | INTEGER |
+| | **Statistics** | | |
+| 40 | `t_linearreg` / `ta_linearreg` | (values, period) | DOUBLE |
+| 41 | `t_linearreg_angle` / `ta_linearreg_angle` | (values, period) | DOUBLE |
+| 42 | `t_linearreg_intercept` / `ta_linearreg_intercept` | (values, period) | DOUBLE |
+| 43 | `t_linearreg_slope` / `ta_linearreg_slope` | (values, period) | DOUBLE |
+| 44 | `t_tsf` / `ta_tsf` | (values, period) | DOUBLE |
+| 45 | `t_sum` / `ta_sum` | (values, period) | DOUBLE |
+| 46 | `t_max` / `ta_max` | (values, period) | DOUBLE |
+| 47 | `t_min` / `ta_min` | (values, period) | DOUBLE |
+| 48 | `t_maxindex` / `ta_maxindex` | (values, period) | INTEGER |
+| 49 | `t_minindex` / `ta_minindex` | (values, period) | INTEGER |
+| | **Math Transform** (scalar only) | | |
+| 50 | `t_acos` | (values) | DOUBLE |
+| 51 | `t_asin` | (values) | DOUBLE |
+| 52 | `t_atan` | (values) | DOUBLE |
+| 53 | `t_ceil` | (values) | DOUBLE |
+| 54 | `t_cos` | (values) | DOUBLE |
+| 55 | `t_cosh` | (values) | DOUBLE |
+| 56 | `t_exp` | (values) | DOUBLE |
+| 57 | `t_floor` | (values) | DOUBLE |
+| 58 | `t_ln` | (values) | DOUBLE |
+| 59 | `t_log10` | (values) | DOUBLE |
+| 60 | `t_sin` | (values) | DOUBLE |
+| 61 | `t_sinh` | (values) | DOUBLE |
+| 62 | `t_sqrt` | (values) | DOUBLE |
+| 63 | `t_tan` | (values) | DOUBLE |
+| 64 | `t_tanh` | (values) | DOUBLE |
+| | **Pattern Recognition** (scalar only) | | |
+| 65 | `t_cdl2crows` | (open, high, low, close) | INTEGER |
+| 66 | `t_cdl3blackcrows` | (open, high, low, close) | INTEGER |
+| 67 | `t_cdl3inside` | (open, high, low, close) | INTEGER |
+| 68 | `t_cdl3linestrike` | (open, high, low, close) | INTEGER |
+| 69 | `t_cdl3outside` | (open, high, low, close) | INTEGER |
+| 70 | `t_cdl3starsinsouth` | (open, high, low, close) | INTEGER |
+| 71 | `t_cdl3whitesoldiers` | (open, high, low, close) | INTEGER |
+| 72 | `t_cdladvanceblock` | (open, high, low, close) | INTEGER |
+| 73 | `t_cdlbelthold` | (open, high, low, close) | INTEGER |
+| 74 | `t_cdlbreakaway` | (open, high, low, close) | INTEGER |
+| 75 | `t_cdlclosingmarubozu` | (open, high, low, close) | INTEGER |
+| 76 | `t_cdlconcealbabyswall` | (open, high, low, close) | INTEGER |
+| 77 | `t_cdlcounterattack` | (open, high, low, close) | INTEGER |
+| 78 | `t_cdldoji` | (open, high, low, close) | INTEGER |
+| 79 | `t_cdldojistar` | (open, high, low, close) | INTEGER |
+| 80 | `t_cdldragonflydoji` | (open, high, low, close) | INTEGER |
+| 81 | `t_cdlengulfing` | (open, high, low, close) | INTEGER |
+| 82 | `t_cdlgapsidesidewhite` | (open, high, low, close) | INTEGER |
+| 83 | `t_cdlgravestonedoji` | (open, high, low, close) | INTEGER |
+| 84 | `t_cdlhammer` | (open, high, low, close) | INTEGER |
+| 85 | `t_cdlhangingman` | (open, high, low, close) | INTEGER |
+| 86 | `t_cdlharami` | (open, high, low, close) | INTEGER |
+| 87 | `t_cdlharamicross` | (open, high, low, close) | INTEGER |
+| 88 | `t_cdlhighwave` | (open, high, low, close) | INTEGER |
+| 89 | `t_cdlhikkake` | (open, high, low, close) | INTEGER |
+| 90 | `t_cdlhikkakemod` | (open, high, low, close) | INTEGER |
+| 91 | `t_cdlhomingpigeon` | (open, high, low, close) | INTEGER |
+| 92 | `t_cdlidentical3crows` | (open, high, low, close) | INTEGER |
+| 93 | `t_cdlinneck` | (open, high, low, close) | INTEGER |
+| 94 | `t_cdlinvertedhammer` | (open, high, low, close) | INTEGER |
+| 95 | `t_cdlkicking` | (open, high, low, close) | INTEGER |
+| 96 | `t_cdlkickingbylength` | (open, high, low, close) | INTEGER |
+| 97 | `t_cdlladderbottom` | (open, high, low, close) | INTEGER |
+| 98 | `t_cdllongleggeddoji` | (open, high, low, close) | INTEGER |
+| 99 | `t_cdllongline` | (open, high, low, close) | INTEGER |
+| 100 | `t_cdlmarubozu` | (open, high, low, close) | INTEGER |
+| 101 | `t_cdlmatchinglow` | (open, high, low, close) | INTEGER |
+| 102 | `t_cdlonneck` | (open, high, low, close) | INTEGER |
+| 103 | `t_cdlpiercing` | (open, high, low, close) | INTEGER |
+| 104 | `t_cdlrickshawman` | (open, high, low, close) | INTEGER |
+| 105 | `t_cdlrisefall3methods` | (open, high, low, close) | INTEGER |
+| 106 | `t_cdlseparatinglines` | (open, high, low, close) | INTEGER |
+| 107 | `t_cdlshootingstar` | (open, high, low, close) | INTEGER |
+| 108 | `t_cdlshortline` | (open, high, low, close) | INTEGER |
+| 109 | `t_cdlspinningtop` | (open, high, low, close) | INTEGER |
+| 110 | `t_cdlstalledpattern` | (open, high, low, close) | INTEGER |
+| 111 | `t_cdlsticksandwich` | (open, high, low, close) | INTEGER |
+| 112 | `t_cdltakuri` | (open, high, low, close) | INTEGER |
+| 113 | `t_cdltasukigap` | (open, high, low, close) | INTEGER |
+| 114 | `t_cdlthrusting` | (open, high, low, close) | INTEGER |
+| 115 | `t_cdltristar` | (open, high, low, close) | INTEGER |
+| 116 | `t_cdlunique3river` | (open, high, low, close) | INTEGER |
+| 117 | `t_cdlupsidegap2crows` | (open, high, low, close) | INTEGER |
+| 118 | `t_cdlxsidegap3methods` | (open, high, low, close) | INTEGER |
+| | **Multi-Output** | | |
+| 119 | `t_macd` / `ta_macd` | (values, fast_period, slow_period, signal_period) | STRUCT(macd, signal, hist) |
+| 120 | `t_bbands` / `ta_bbands` | (values, period, devup, devdn, matype) | STRUCT(upper, middle, lower) |
+| 121 | `t_stoch` / `ta_stoch` | (high, low, close, fastK, slowK, slowKMA, slowD, slowDMA) | STRUCT(slowk, slowd) |
+| 122 | `t_aroon` / `ta_aroon` | (high, low, period) | STRUCT(aroon_down, aroon_up) |
+| 123 | `t_minmax` / `ta_minmax` | (values, period) | STRUCT(min, max) |
+| 124 | `t_mama` / `ta_mama` | (values, fast_limit, slow_limit) | STRUCT(mama, fama) |
+| 125 | `t_ht_phasor` / `ta_ht_phasor` | (values) | STRUCT(inphase, quadrature) |
+| 126 | `t_ht_sine` / `ta_ht_sine` | (values) | STRUCT(sine, leadsine) |
 
 ---
 
@@ -1200,7 +324,7 @@ SELECT
     symbol,
     ts,
     close,
-    ta_rsi(close, 14) OVER (PARTITION BY symbol ORDER BY ts ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS rsi
+    ta_rsi(close, 14) OVER (PARTITION BY symbol ORDER BY ts) AS rsi
 FROM prices;
 ```
 
