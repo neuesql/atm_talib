@@ -1,0 +1,239 @@
+# name: test/sql/test_multi_output_agg.test
+# description: Test multi-output window/aggregate TA-Lib functions
+# group: [talib]
+
+require talib
+
+# ---------- ta_minmax ----------
+
+statement ok
+CREATE TABLE minmax_data AS
+SELECT unnest(range(1, 21))::DOUBLE AS price, unnest(range(1, 21)) AS rn;
+
+# Basic: returns struct with min/max fields (use subquery to prevent filter pushdown)
+query II
+SELECT m.min, m.max
+FROM (SELECT ta_minmax(price, 5) OVER (ORDER BY rn) AS m, rn FROM minmax_data) sub
+WHERE rn = 20;
+----
+16.0	20.0
+
+# NULL for insufficient data (struct itself is NULL)
+query I
+SELECT m IS NULL
+FROM (SELECT ta_minmax(price, 5) OVER (ORDER BY rn) AS m, rn FROM minmax_data) sub
+WHERE rn = 1;
+----
+true
+
+statement ok
+DROP TABLE minmax_data;
+
+# ---------- ta_aroon ----------
+
+statement ok
+CREATE TABLE aroon_data AS
+SELECT (unnest(range(1, 21))::DOUBLE + sin(unnest(range(1, 21))::DOUBLE) * 2) AS high,
+       (unnest(range(1, 21))::DOUBLE - sin(unnest(range(1, 21))::DOUBLE) * 2) AS low,
+       unnest(range(1, 21)) AS rn;
+
+# Basic: returns struct with aroon_down/aroon_up fields
+query I
+SELECT m.aroon_up IS NOT NULL
+FROM (SELECT ta_aroon(high, low, 14) OVER (ORDER BY rn) AS m, rn FROM aroon_data) sub
+WHERE rn = 20;
+----
+true
+
+# NULL for insufficient data
+query I
+SELECT m IS NULL
+FROM (SELECT ta_aroon(high, low, 14) OVER (ORDER BY rn) AS m, rn FROM aroon_data) sub
+WHERE rn = 1;
+----
+true
+
+statement ok
+DROP TABLE aroon_data;
+
+# ---------- ta_ht_phasor ----------
+
+statement ok
+CREATE TABLE ht_data AS
+SELECT sin(unnest(range(1, 101))::DOUBLE * 0.1) * 50 + 100 AS price,
+       unnest(range(1, 101)) AS rn;
+
+# Basic: returns struct with inphase/quadrature fields
+query I
+SELECT m.inphase IS NOT NULL
+FROM (SELECT ta_ht_phasor(price) OVER (ORDER BY rn) AS m, rn FROM ht_data) sub
+WHERE rn = 100;
+----
+true
+
+query I
+SELECT m.quadrature IS NOT NULL
+FROM (SELECT ta_ht_phasor(price) OVER (ORDER BY rn) AS m, rn FROM ht_data) sub
+WHERE rn = 100;
+----
+true
+
+# ---------- ta_ht_sine ----------
+
+# Basic: returns struct with sine/leadsine fields
+query I
+SELECT m.sine IS NOT NULL
+FROM (SELECT ta_ht_sine(price) OVER (ORDER BY rn) AS m, rn FROM ht_data) sub
+WHERE rn = 100;
+----
+true
+
+query I
+SELECT m.leadsine IS NOT NULL
+FROM (SELECT ta_ht_sine(price) OVER (ORDER BY rn) AS m, rn FROM ht_data) sub
+WHERE rn = 100;
+----
+true
+
+statement ok
+DROP TABLE ht_data;
+
+# ---------- ta_mama ----------
+
+statement ok
+CREATE TABLE mama_data AS
+SELECT sin(unnest(range(1, 101))::DOUBLE * 0.1) * 50 + 100 AS price,
+       unnest(range(1, 101)) AS rn;
+
+# Basic: returns struct with mama/fama fields
+query I
+SELECT m.mama IS NOT NULL
+FROM (SELECT ta_mama(price, 0.5, 0.05) OVER (ORDER BY rn) AS m, rn FROM mama_data) sub
+WHERE rn = 100;
+----
+true
+
+query I
+SELECT m.fama IS NOT NULL
+FROM (SELECT ta_mama(price, 0.5, 0.05) OVER (ORDER BY rn) AS m, rn FROM mama_data) sub
+WHERE rn = 100;
+----
+true
+
+statement ok
+DROP TABLE mama_data;
+
+# ---------- ta_macd ----------
+
+statement ok
+CREATE TABLE macd_data AS
+SELECT (100.0 + unnest(range(1, 51))::DOUBLE * 0.5 + sin(unnest(range(1, 51))::DOUBLE * 0.3) * 5) AS price,
+       unnest(range(1, 51)) AS rn;
+
+# Basic: returns struct with macd/signal/hist fields
+query I
+SELECT m.macd IS NOT NULL
+FROM (SELECT ta_macd(price, 12, 26, 9) OVER (ORDER BY rn) AS m, rn FROM macd_data) sub
+WHERE rn = 50;
+----
+true
+
+query I
+SELECT m.signal IS NOT NULL
+FROM (SELECT ta_macd(price, 12, 26, 9) OVER (ORDER BY rn) AS m, rn FROM macd_data) sub
+WHERE rn = 50;
+----
+true
+
+query I
+SELECT m.hist IS NOT NULL
+FROM (SELECT ta_macd(price, 12, 26, 9) OVER (ORDER BY rn) AS m, rn FROM macd_data) sub
+WHERE rn = 50;
+----
+true
+
+# NULL for insufficient data
+query I
+SELECT m IS NULL
+FROM (SELECT ta_macd(price, 12, 26, 9) OVER (ORDER BY rn) AS m, rn FROM macd_data) sub
+WHERE rn = 1;
+----
+true
+
+statement ok
+DROP TABLE macd_data;
+
+# ---------- ta_bbands ----------
+
+statement ok
+CREATE TABLE bbands_data AS
+SELECT (100.0 + sin(unnest(range(1, 31))::DOUBLE * 0.2) * 10) AS price,
+       unnest(range(1, 31)) AS rn;
+
+# Basic: returns struct with upper/middle/lower fields
+query I
+SELECT m.upper IS NOT NULL
+FROM (SELECT ta_bbands(price, 20, 2.0, 2.0, 0) OVER (ORDER BY rn) AS m, rn FROM bbands_data) sub
+WHERE rn = 30;
+----
+true
+
+query I
+SELECT m.middle IS NOT NULL
+FROM (SELECT ta_bbands(price, 20, 2.0, 2.0, 0) OVER (ORDER BY rn) AS m, rn FROM bbands_data) sub
+WHERE rn = 30;
+----
+true
+
+query I
+SELECT m.lower IS NOT NULL
+FROM (SELECT ta_bbands(price, 20, 2.0, 2.0, 0) OVER (ORDER BY rn) AS m, rn FROM bbands_data) sub
+WHERE rn = 30;
+----
+true
+
+# NULL for insufficient data
+query I
+SELECT m IS NULL
+FROM (SELECT ta_bbands(price, 20, 2.0, 2.0, 0) OVER (ORDER BY rn) AS m, rn FROM bbands_data) sub
+WHERE rn = 1;
+----
+true
+
+statement ok
+DROP TABLE bbands_data;
+
+# ---------- ta_stoch ----------
+
+statement ok
+CREATE TABLE stoch_data AS
+SELECT (100.0 + unnest(range(1, 31))::DOUBLE * 0.3 + sin(unnest(range(1, 31))::DOUBLE) * 3) AS high,
+       (95.0 + unnest(range(1, 31))::DOUBLE * 0.3 - sin(unnest(range(1, 31))::DOUBLE) * 3) AS low,
+       (97.5 + unnest(range(1, 31))::DOUBLE * 0.3 + cos(unnest(range(1, 31))::DOUBLE) * 2) AS close,
+       unnest(range(1, 31)) AS rn;
+
+# Basic: returns struct with slowk/slowd fields
+query I
+SELECT m.slowk IS NOT NULL
+FROM (SELECT ta_stoch(high, low, close, 5, 3, 0, 3, 0) OVER (ORDER BY rn) AS m, rn FROM stoch_data) sub
+WHERE rn = 30;
+----
+true
+
+query I
+SELECT m.slowd IS NOT NULL
+FROM (SELECT ta_stoch(high, low, close, 5, 3, 0, 3, 0) OVER (ORDER BY rn) AS m, rn FROM stoch_data) sub
+WHERE rn = 30;
+----
+true
+
+# NULL for insufficient data
+query I
+SELECT m IS NULL
+FROM (SELECT ta_stoch(high, low, close, 5, 3, 0, 3, 0) OVER (ORDER BY rn) AS m, rn FROM stoch_data) sub
+WHERE rn = 1;
+----
+true
+
+statement ok
+DROP TABLE stoch_data;
