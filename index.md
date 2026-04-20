@@ -307,161 +307,161 @@ Every indicator is available in two forms:
 
 ### Overlap Studies
 
-- **sma** — Simple Moving Average: `sum(close, n) / n`
-- **ema** — Exponential Moving Average: `close * k + ema_prev * (1 - k)`, where `k = 2 / (n + 1)`
-- **wma** — Weighted Moving Average: `sum(close_i * weight_i) / sum(weights)`, weights linearly increase
-- **dema** — Double EMA: `2 * EMA(n) - EMA(EMA(n))`
-- **tema** — Triple EMA: `3 * EMA - 3 * EMA(EMA) + EMA(EMA(EMA))`
-- **trima** — Triangular Moving Average: `SMA(SMA(n))`
-- **kama** — Kaufman Adaptive MA: adapts smoothing constant based on price efficiency ratio
-- **midpoint** — Midpoint over period: `(max(close, n) + min(close, n)) / 2`
-- **midprice** — Midpoint Price: `(highest_high(n) + lowest_low(n)) / 2`
+- **sma** — Simple Moving Average. $SMA = \frac{1}{n}\sum_{i=0}^{n-1} x_{t-i}$
+- **ema** — Exponential Moving Average. $EMA_t = \alpha \cdot x_t + (1 - \alpha) \cdot EMA_{t-1}$, where $\alpha = \frac{2}{n+1}$
+- **wma** — Weighted Moving Average. $WMA = \frac{\sum_{i=0}^{n-1}(n-i) \cdot x_{t-i}}{\sum_{i=1}^{n} i}$
+- **dema** — Double EMA. $DEMA = 2 \cdot EMA(x, n) - EMA(EMA(x, n), n)$
+- **tema** — Triple EMA. $TEMA = 3 \cdot E_1 - 3 \cdot E_2 + E_3$, where $E_1 = EMA$, $E_2 = EMA(E_1)$, $E_3 = EMA(E_2)$
+- **trima** — Triangular Moving Average. $TRIMA = SMA(SMA(x, m), m)$, where $m = \lceil(n+1)/2\rceil$
+- **kama** — Kaufman Adaptive MA. $KAMA_t = KAMA_{t-1} + SC^2 \cdot (x_t - KAMA_{t-1})$, where $SC = ER \cdot (\alpha_{fast} - \alpha_{slow}) + \alpha_{slow}$
+- **midpoint** — Midpoint over period. $MID = \frac{\max(x, n) + \min(x, n)}{2}$
+- **midprice** — Midpoint Price. $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$
 
 ### Momentum Indicators
 
-- **rsi** — Relative Strength Index: `100 - 100 / (1 + avg_gain / avg_loss)`
-- **cmo** — Chande Momentum Oscillator: `(sum_up - sum_down) / (sum_up + sum_down) * 100`
-- **mom** — Momentum: `close - close[n]`
-- **roc** — Rate of Change: `(close - close[n]) / close[n] * 100`
-- **rocp** — Rate of Change Percentage: `(close - close[n]) / close[n]`
-- **rocr** — Rate of Change Ratio: `close / close[n]`
-- **rocr100** — Rate of Change Ratio x100: `close / close[n] * 100`
-- **trix** — Triple Smooth EMA ROC: 1-day percent change of triple-smoothed EMA
-- **willr** — Williams %R: `(highest_high - close) / (highest_high - lowest_low) * -100`
-- **cci** — Commodity Channel Index: `(tp - sma(tp)) / (0.015 * mean_deviation)`
-- **adx** — Average Directional Index: smoothed average of DX over n periods
-- **adxr** — ADX Rating: `(adx + adx[n]) / 2`
-- **dx** — Directional Movement Index: `|+DI - -DI| / (+DI + -DI) * 100`
-- **plus_di** — Plus Directional Indicator: `smoothed(+DM) / ATR * 100`
-- **minus_di** — Minus Directional Indicator: `smoothed(-DM) / ATR * 100`
-- **plus_dm** — Plus Directional Movement: `high - prev_high` if positive and > `prev_low - low`
-- **minus_dm** — Minus Directional Movement: `prev_low - low` if positive and > `high - prev_high`
+- **rsi** — Relative Strength Index. $RSI = 100 - \frac{100}{1 + \frac{\overline{gain}}{\overline{loss}}}$
+- **cmo** — Chande Momentum Oscillator. $CMO = \frac{\sum up - \sum down}{\sum up + \sum down} \times 100$
+- **mom** — Momentum. $MOM = x_t - x_{t-n}$
+- **roc** — Rate of Change. $ROC = \frac{x_t - x_{t-n}}{x_{t-n}} \times 100$
+- **rocp** — Rate of Change Percentage. $ROCP = \frac{x_t - x_{t-n}}{x_{t-n}}$
+- **rocr** — Rate of Change Ratio. $ROCR = \frac{x_t}{x_{t-n}}$
+- **rocr100** — Rate of Change Ratio x100. $ROCR100 = \frac{x_t}{x_{t-n}} \times 100$
+- **trix** — Triple Smooth EMA ROC. $TRIX = \frac{E_3(t) - E_3(t-1)}{E_3(t-1)} \times 100$, where $E_3 = EMA(EMA(EMA(x)))$
+- **willr** — Williams %R. $\%R = \frac{H_n - C}{H_n - L_n} \times (-100)$
+- **cci** — Commodity Channel Index. $CCI = \frac{TP - SMA(TP, n)}{0.015 \cdot MD}$, where $TP = \frac{H+L+C}{3}$
+- **adx** — Average Directional Index. $ADX = SMA(DX, n)$
+- **adxr** — ADX Rating. $ADXR = \frac{ADX_t + ADX_{t-n}}{2}$
+- **dx** — Directional Movement Index. $DX = \frac{|+DI - (-DI)|}{+DI + (-DI)} \times 100$
+- **plus_di** — Plus Directional Indicator. $+DI = \frac{Smooth(+DM, n)}{ATR(n)} \times 100$
+- **minus_di** — Minus Directional Indicator. $-DI = \frac{Smooth(-DM, n)}{ATR(n)} \times 100$
+- **plus_dm** — Plus Directional Movement. $+DM = H_t - H_{t-1}$ if $> 0$ and $> (L_{t-1} - L_t)$, else $0$
+- **minus_dm** — Minus Directional Movement. $-DM = L_{t-1} - L_t$ if $> 0$ and $> (H_t - H_{t-1})$, else $0$
 
 ### Volume Indicators
 
-- **ad** — Chaikin A/D Line: `cumsum(((close - low) - (high - close)) / (high - low) * volume)`
+- **ad** — Chaikin A/D Line. $AD = \sum \frac{(C - L) - (H - C)}{H - L} \times V$
 
 ### Volatility
 
-- **atr** — Average True Range: smoothed average of `true_range` over n periods
-- **natr** — Normalized ATR: `ATR / close * 100`
-- **trange** — True Range: `max(high - low, |high - prev_close|, |low - prev_close|)`
+- **atr** — Average True Range. $ATR = \frac{1}{n}\sum_{i=1}^{n} TR_i$ (Wilder smoothing)
+- **natr** — Normalized ATR. $NATR = \frac{ATR}{C} \times 100$
+- **trange** — True Range. $TR = \max(H - L,\ |H - C_{t-1}|,\ |L - C_{t-1}|)$
 
 ### Price Transform
 
-- **avgprice** — Average Price: `(open + high + low + close) / 4`
-- **bop** — Balance of Power: `(close - open) / (high - low)`
-- **medprice** — Median Price: `(high + low) / 2`
-- **typprice** — Typical Price: `(high + low + close) / 3`
-- **wclprice** — Weighted Close: `(high + low + 2 * close) / 4`
+- **avgprice** — Average Price. $AVGPRICE = \frac{O + H + L + C}{4}$
+- **bop** — Balance of Power. $BOP = \frac{C - O}{H - L}$
+- **medprice** — Median Price. $MEDPRICE = \frac{H + L}{2}$
+- **typprice** — Typical Price. $TYPPRICE = \frac{H + L + C}{3}$
+- **wclprice** — Weighted Close. $WCLPRICE = \frac{H + L + 2C}{4}$
 
 ### Cycle Indicators
 
-- **ht_dcperiod** — Dominant Cycle Period: Hilbert Transform-derived dominant cycle length
-- **ht_dcphase** — Dominant Cycle Phase: phase angle of the dominant cycle (degrees)
-- **ht_trendline** — Instantaneous Trendline: Hilbert Transform smoothed trendline
-- **ht_trendmode** — Trend vs Cycle Mode: returns 1 (trending) or 0 (cycling)
+- **ht_dcperiod** — Dominant Cycle Period. Hilbert Transform extracts the dominant cycle length from price data.
+- **ht_dcphase** — Dominant Cycle Phase. Phase angle $\phi$ of the dominant cycle in degrees.
+- **ht_trendline** — Instantaneous Trendline. Hilbert-smoothed trend component of the price series.
+- **ht_trendmode** — Trend vs Cycle Mode. Returns $1$ if trending, $0$ if in cycle mode.
 
 ### Statistics
 
-- **linearreg** — Linear Regression: endpoint value of best-fit line over n periods
-- **linearreg_angle** — Linear Reg Angle: `atan(slope)` in degrees
-- **linearreg_intercept** — Linear Reg Intercept: y-intercept of best-fit line
-- **linearreg_slope** — Linear Reg Slope: slope of best-fit line over n periods
-- **tsf** — Time Series Forecast: projected next value from linear regression
-- **sum** — Rolling Sum: `sum(values, n)`
-- **max** — Highest Value: `max(values, n)`
-- **min** — Lowest Value: `min(values, n)`
-- **maxindex** — Index of Highest: position of max value within the window
-- **minindex** — Index of Lowest: position of min value within the window
+- **linearreg** — Linear Regression. $y = b_0 + b_1 \cdot t$, returns endpoint $\hat{y}_t$
+- **linearreg_angle** — Linear Regression Angle. $\theta = \arctan(b_1)$ in degrees
+- **linearreg_intercept** — Linear Regression Intercept. $b_0$ of best-fit line $y = b_0 + b_1 t$
+- **linearreg_slope** — Linear Regression Slope. $b_1 = \frac{n\sum ty - \sum t \sum y}{n\sum t^2 - (\sum t)^2}$
+- **tsf** — Time Series Forecast. $TSF = b_0 + b_1 \cdot (n + 1)$ (projects one period ahead)
+- **sum** — Rolling Sum. $SUM = \sum_{i=0}^{n-1} x_{t-i}$
+- **max** — Highest Value. $MAX = \max(x_{t}, x_{t-1}, \ldots, x_{t-n+1})$
+- **min** — Lowest Value. $MIN = \min(x_{t}, x_{t-1}, \ldots, x_{t-n+1})$
+- **maxindex** — Index of Highest. Position $i$ where $x_i = \max(x)$ within the window.
+- **minindex** — Index of Lowest. Position $i$ where $x_i = \min(x)$ within the window.
 
 ### Math Transform
 
-- **acos** — Arc Cosine: `acos(x)`
-- **asin** — Arc Sine: `asin(x)`
-- **atan** — Arc Tangent: `atan(x)`
-- **ceil** — Ceiling: smallest integer >= x
-- **cos** — Cosine: `cos(x)`
-- **cosh** — Hyperbolic Cosine: `cosh(x)`
-- **exp** — Exponential: `e^x`
-- **floor** — Floor: largest integer <= x
-- **ln** — Natural Logarithm: `ln(x)`
-- **log10** — Base-10 Logarithm: `log10(x)`
-- **sin** — Sine: `sin(x)`
-- **sinh** — Hyperbolic Sine: `sinh(x)`
-- **sqrt** — Square Root: `sqrt(x)`
-- **tan** — Tangent: `tan(x)`
-- **tanh** — Hyperbolic Tangent: `tanh(x)`
+- **acos** — Arc Cosine. $y = \cos^{-1}(x)$
+- **asin** — Arc Sine. $y = \sin^{-1}(x)$
+- **atan** — Arc Tangent. $y = \tan^{-1}(x)$
+- **ceil** — Ceiling. $y = \lceil x \rceil$
+- **cos** — Cosine. $y = \cos(x)$
+- **cosh** — Hyperbolic Cosine. $y = \cosh(x) = \frac{e^x + e^{-x}}{2}$
+- **exp** — Exponential. $y = e^x$
+- **floor** — Floor. $y = \lfloor x \rfloor$
+- **ln** — Natural Logarithm. $y = \ln(x)$
+- **log10** — Base-10 Logarithm. $y = \log_{10}(x)$
+- **sin** — Sine. $y = \sin(x)$
+- **sinh** — Hyperbolic Sine. $y = \sinh(x) = \frac{e^x - e^{-x}}{2}$
+- **sqrt** — Square Root. $y = \sqrt{x}$
+- **tan** — Tangent. $y = \tan(x)$
+- **tanh** — Hyperbolic Tangent. $y = \tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$
 
 ### Pattern Recognition
 
-All candlestick patterns take (open, high, low, close) and return `100` (bullish), `-100` (bearish), or `0` (no pattern).
+All candlestick patterns take $(O, H, L, C)$ and return $+100$ (bullish), $-100$ (bearish), or $0$ (no pattern).
 
 - **cdl2crows** — Two Crows: bearish reversal, two black candles gapping above uptrend
 - **cdl3blackcrows** — Three Black Crows: three consecutive long bearish candles
-- **cdl3inside** — Three Inside Up/Down: reversal confirmed by third candle breaking first candle's range
-- **cdl3linestrike** — Three-Line Strike: three same-direction candles followed by a strike candle
+- **cdl3inside** — Three Inside Up/Down: reversal confirmed by third candle breaking first's range
+- **cdl3linestrike** — Three-Line Strike: three same-direction candles then a strike candle
 - **cdl3outside** — Three Outside Up/Down: engulfing pattern confirmed by third candle
-- **cdl3starsinsouth** — Three Stars In The South: three declining bearish candles with shrinking bodies
-- **cdl3whitesoldiers** — Three Advancing White Soldiers: three consecutive long bullish candles
-- **cdladvanceblock** — Advance Block: three bullish candles with shrinking bodies (weakening)
-- **cdlbelthold** — Belt-hold: long candle opening at its extreme (marubozu-like)
-- **cdlbreakaway** — Breakaway: gap followed by three candles, then reversal closing the gap
-- **cdlclosingmarubozu** — Closing Marubozu: candle with no shadow on the closing side
-- **cdlconcealbabyswall** — Concealing Baby Swallow: four-candle bearish pattern with harami
+- **cdl3starsinsouth** — Three Stars In The South: three declining bearish candles, shrinking bodies
+- **cdl3whitesoldiers** — Three White Soldiers: three consecutive long bullish candles
+- **cdladvanceblock** — Advance Block: three bullish candles with shrinking bodies
+- **cdlbelthold** — Belt-hold: long candle opening at its extreme
+- **cdlbreakaway** — Breakaway: gap then three candles, reversal closing the gap
+- **cdlclosingmarubozu** — Closing Marubozu: no shadow on the closing side
+- **cdlconcealbabyswall** — Concealing Baby Swallow: four-candle bearish pattern
 - **cdlcounterattack** — Counterattack: two opposite candles with same close
-- **cdldoji** — Doji: open and close are virtually the same
-- **cdldojistar** — Doji Star: doji gapping away from previous candle
-- **cdldragonflydoji** — Dragonfly Doji: doji with long lower shadow, no upper shadow
-- **cdlengulfing** — Engulfing: second candle completely engulfs the first
-- **cdlgapsidesidewhite** — Gap Side-by-Side White: two white candles of similar size after a gap
-- **cdlgravestonedoji** — Gravestone Doji: doji with long upper shadow, no lower shadow
-- **cdlhammer** — Hammer: small body at top, long lower shadow (2x body)
-- **cdlhangingman** — Hanging Man: hammer shape appearing in uptrend (bearish)
-- **cdlharami** — Harami: small candle contained within previous candle's body
+- **cdldoji** — Doji: $|O - C| \approx 0$
+- **cdldojistar** — Doji Star: doji gapping from previous candle
+- **cdldragonflydoji** — Dragonfly Doji: doji with long lower shadow, no upper
+- **cdlengulfing** — Engulfing: second body fully contains the first
+- **cdlgapsidesidewhite** — Gap Side-by-Side White: two similar white candles after gap
+- **cdlgravestonedoji** — Gravestone Doji: doji with long upper shadow, no lower
+- **cdlhammer** — Hammer: small body at top, lower shadow $\geq 2 \times$ body
+- **cdlhangingman** — Hanging Man: hammer in uptrend (bearish)
+- **cdlharami** — Harami: second candle contained within first's body
 - **cdlharamicross** — Harami Cross: harami where second candle is a doji
-- **cdlhighwave** — High-Wave Candle: very long upper and lower shadows, small body
-- **cdlhikkake** — Hikkake: inside bar breakout failure pattern
-- **cdlhikkakemod** — Modified Hikkake: hikkake confirmed by subsequent price action
-- **cdlhomingpigeon** — Homing Pigeon: two bearish candles, second inside first (bullish)
-- **cdlidentical3crows** — Identical Three Crows: three black crows each opening at prior close
-- **cdlinneck** — In-Neck: bearish candle followed by small bullish closing near prior low
+- **cdlhighwave** — High-Wave Candle: very long shadows, small body
+- **cdlhikkake** — Hikkake: inside bar breakout failure
+- **cdlhikkakemod** — Modified Hikkake: confirmed by subsequent price action
+- **cdlhomingpigeon** — Homing Pigeon: two bearish, second inside first (bullish)
+- **cdlidentical3crows** — Identical Three Crows: each opens at prior close
+- **cdlinneck** — In-Neck: small bullish closing near prior low
 - **cdlinvertedhammer** — Inverted Hammer: small body at bottom, long upper shadow
-- **cdlkicking** — Kicking: two opposing marubozu with a gap between
-- **cdlkickingbylength** — Kicking by Length: direction determined by longer marubozu
-- **cdlladderbottom** — Ladder Bottom: four bearish candles then bullish reversal
-- **cdllongleggeddoji** — Long Legged Doji: doji with very long upper and lower shadows
-- **cdllongline** — Long Line Candle: candle with unusually long body
-- **cdlmarubozu** — Marubozu: candle with no shadows (pure body)
-- **cdlmatchinglow** — Matching Low: two bearish candles with same close (support)
-- **cdlonneck** — On-Neck: bearish candle followed by small bullish closing at prior low
-- **cdlpiercing** — Piercing: bullish candle closing above midpoint of prior bearish candle
-- **cdlrickshawman** — Rickshaw Man: long-legged doji with body at center
-- **cdlrisefall3methods** — Rising/Falling Three Methods: trend continuation with small counter-trend candles
-- **cdlseparatinglines** — Separating Lines: two opposite candles opening at same price
-- **cdlshootingstar** — Shooting Star: inverted hammer in uptrend (bearish reversal)
-- **cdlshortline** — Short Line Candle: candle with unusually short body
-- **cdlspinningtop** — Spinning Top: small body with upper and lower shadows
-- **cdlstalledpattern** — Stalled Pattern: three bullish candles, third with small body (slowing)
-- **cdlsticksandwich** — Stick Sandwich: two same-close candles sandwiching an opposite candle
-- **cdltakuri** — Takuri: dragonfly doji with very long lower shadow
-- **cdltasukigap** — Tasuki Gap: gap followed by a partial-fill candle (continuation)
-- **cdlthrusting** — Thrusting: bearish candle then bullish closing below midpoint of first
-- **cdltristar** — Tristar: three consecutive dojis with middle gapping (reversal)
-- **cdlunique3river** — Unique 3 River: three-candle bullish reversal at bottom
-- **cdlupsidegap2crows** — Upside Gap Two Crows: two bearish candles gapping above uptrend
-- **cdlxsidegap3methods** — Gap Three Methods: gap followed by opposite candle closing the gap
+- **cdlkicking** — Kicking: two opposing marubozu with gap
+- **cdlkickingbylength** — Kicking by Length: direction by longer marubozu
+- **cdlladderbottom** — Ladder Bottom: four bearish then bullish reversal
+- **cdllongleggeddoji** — Long Legged Doji: very long both shadows
+- **cdllongline** — Long Line Candle: unusually long body
+- **cdlmarubozu** — Marubozu: no shadows (pure body)
+- **cdlmatchinglow** — Matching Low: two bearish with same close
+- **cdlonneck** — On-Neck: bullish closing exactly at prior low
+- **cdlpiercing** — Piercing: bullish closing above midpoint of prior bearish
+- **cdlrickshawman** — Rickshaw Man: long-legged doji, body at center
+- **cdlrisefall3methods** — Rising/Falling Three Methods: continuation pattern
+- **cdlseparatinglines** — Separating Lines: opposite candles, same open
+- **cdlshootingstar** — Shooting Star: inverted hammer in uptrend
+- **cdlshortline** — Short Line Candle: unusually short body
+- **cdlspinningtop** — Spinning Top: small body with both shadows
+- **cdlstalledpattern** — Stalled Pattern: three bullish, third small (slowing)
+- **cdlsticksandwich** — Stick Sandwich: same-close candles sandwiching opposite
+- **cdltakuri** — Takuri: doji with very long lower shadow
+- **cdltasukigap** — Tasuki Gap: gap then partial-fill candle (continuation)
+- **cdlthrusting** — Thrusting: bullish closing below midpoint of prior bearish
+- **cdltristar** — Tristar: three dojis with middle gapping
+- **cdlunique3river** — Unique 3 River: three-candle bullish reversal
+- **cdlupsidegap2crows** — Upside Gap Two Crows: two bearish gapping above uptrend
+- **cdlxsidegap3methods** — Gap Three Methods: opposite candle closing the gap
 
 ### Multi-Output
 
-- **macd** — MACD: `macd = EMA(fast) - EMA(slow)`, `signal = EMA(macd, signal_period)`, `hist = macd - signal`
-- **bbands** — Bollinger Bands: `middle = SMA(n)`, `upper = middle + k * stddev`, `lower = middle - k * stddev`
-- **stoch** — Stochastic: `%K = (close - lowest_low) / (highest_high - lowest_low) * 100`, `%D = SMA(%K)`
-- **aroon** — Aroon: `up = (n - bars_since_high) / n * 100`, `down = (n - bars_since_low) / n * 100`
-- **minmax** — Min/Max: lowest and highest values over rolling window in single pass
-- **mama** — MESA Adaptive MA: phase-adaptive moving average with fast/slow limits
-- **ht_phasor** — Hilbert Phasor: in-phase and quadrature components of the dominant cycle
-- **ht_sine** — Hilbert SineWave: sine and lead-sine of the dominant cycle phase
+- **macd** — MACD. $MACD = EMA(x, f) - EMA(x, s)$; $Signal = EMA(MACD, p)$; $Hist = MACD - Signal$
+- **bbands** — Bollinger Bands. $Mid = SMA(x, n)$; $Upper = Mid + k\sigma$; $Lower = Mid - k\sigma$
+- **stoch** — Stochastic. $\%K = \frac{C - L_n}{H_n - L_n} \times 100$; $\%D = SMA(\%K)$
+- **aroon** — Aroon. $Up = \frac{n - \text{bars since } H_n}{n} \times 100$; $Down = \frac{n - \text{bars since } L_n}{n} \times 100$
+- **minmax** — Min/Max. $\min(x_{t-n+1}, \ldots, x_t)$ and $\max(x_{t-n+1}, \ldots, x_t)$ in single pass
+- **mama** — MESA Adaptive MA. Phase-adaptive MA: $MAMA_t = MAMA_{t-1} + \alpha_t(x_t - MAMA_{t-1})$
+- **ht_phasor** — Hilbert Phasor. In-phase $I$ and quadrature $Q$ components of dominant cycle.
+- **ht_sine** — Hilbert SineWave. $\sin(\phi)$ and $\sin(\phi + \pi/4)$ of dominant cycle phase $\phi$.
 
 ---
 
