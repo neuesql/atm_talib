@@ -305,10 +305,10 @@ $-DM = L_{t-1} - L_t \text{ if } > 0 \text{ and } > (H_t - H_{t-1}), \text{ else
 17. **AROON** [Wikipedia](https://en.wikipedia.org/wiki/Aroon_indicator): Aroon Indicator
 $Up = \frac{n - \text{bars since } H_n}{n} \times 100; \quad Down = \frac{n - \text{bars since } L_n}{n} \times 100$
 
-18. **MIDPOINT** [TA-Lib](https://ta-lib.org/functions/midpoint/): Midpoint over period
+18. **MIDPOINT** [Investopedia](https://www.investopedia.com/terms/m/midpoint.asp): Midpoint over period
 $MID = \frac{\max(x, n) + \min(x, n)}{2}$
 
-19. **MIDPRICE** [TA-Lib](https://ta-lib.org/functions/midprice/): Midpoint Price over period
+19. **MIDPRICE** [Investopedia](https://www.investopedia.com/terms/m/midpoint.asp): Midpoint Price over period
 $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$
 
 ### Momentum
@@ -328,13 +328,13 @@ $MOM = x_t - x_{t-n}$
 24. **ROC** [Wikipedia](https://en.wikipedia.org/wiki/Momentum_(technical_analysis)): Rate of Change
 $ROC = \frac{x_t - x_{t-n}}{x_{t-n}} \times 100$
 
-25. **ROCP** [TA-Lib](https://ta-lib.org/functions/rocp/): Rate of Change (Percentage)
+25. **ROCP** [Tulip](https://tulipindicators.org/roc): Rate of Change (Percentage)
 $ROCP = \frac{x_t - x_{t-n}}{x_{t-n}}$
 
-26. **ROCR** [TA-Lib](https://ta-lib.org/functions/rocr/): Rate of Change (Ratio)
+26. **ROCR** [Tulip](https://tulipindicators.org/rocr): Rate of Change (Ratio)
 $ROCR = \frac{x_t}{x_{t-n}}$
 
-27. **ROCR100** [TA-Lib](https://ta-lib.org/functions/rocr100/): Rate of Change (Ratio x100)
+27. **ROCR100** [Tulip](https://tulipindicators.org/rocr): Rate of Change (Ratio x100)
 $ROCR100 = \frac{x_t}{x_{t-n}} \times 100$
 
 28. **TRIX** [Wikipedia](https://en.wikipedia.org/wiki/Trix_(technical_analysis)): Triple Smooth EMA Rate of Change
@@ -368,21 +368,21 @@ $TR = \max(H - L,\ |H - C_{t-1}|,\ |L - C_{t-1}|)$
 36. **BBANDS** [Wikipedia](https://en.wikipedia.org/wiki/Bollinger_Bands): Bollinger Bands
 $Mid = SMA(x, n); \quad Upper = Mid + k\sigma; \quad Lower = Mid - k\sigma$
 
-37. **MINMAX** [TA-Lib](https://ta-lib.org/functions/minmax/): Min/Max over period
+37. **MINMAX** [Tulip](https://tulipindicators.org/min): Min/Max over period
 $\min(x_{t-n+1}, \ldots, x_t)$ and $\max(x_{t-n+1}, \ldots, x_t)$ in single pass
 
 ### Price Transform
 
-38. **AVGPRICE** [TA-Lib](https://ta-lib.org/functions/avgprice/): Average Price
+38. **AVGPRICE** [Tulip](https://tulipindicators.org/avgprice): Average Price
 $AVGPRICE = \frac{O + H + L + C}{4}$
 
-39. **MEDPRICE** [TA-Lib](https://ta-lib.org/functions/medprice/): Median Price
+39. **MEDPRICE** [Tulip](https://tulipindicators.org/medprice): Median Price
 $MEDPRICE = \frac{H + L}{2}$
 
 40. **TYPPRICE** [Wikipedia](https://en.wikipedia.org/wiki/Typical_price): Typical Price
 $TYPPRICE = \frac{H + L + C}{3}$
 
-41. **WCLPRICE** [TA-Lib](https://ta-lib.org/functions/wclprice/): Weighted Close Price
+41. **WCLPRICE** [Tulip](https://tulipindicators.org/wcprice): Weighted Close Price
 $WCLPRICE = \frac{H + L + 2C}{4}$
 
 ### Cycle
@@ -422,19 +422,19 @@ $b_1 = \frac{n\sum ty - \sum t \sum y}{n\sum t^2 - (\sum t)^2}$
 44. **TSF** [Investopedia](https://www.investopedia.com/terms/t/time-series-forecast.asp): Time Series Forecast
 $TSF = b_0 + b_1 \cdot (n + 1)$
 
-45. **SUM** [TA-Lib](https://ta-lib.org/functions/sum/): Rolling Summation
+45. **SUM** [Tulip](https://tulipindicators.org/sum): Rolling Summation
 $SUM = \sum_{i=0}^{n-1} x_{t-i}$
 
-46. **MAX** [TA-Lib](https://ta-lib.org/functions/max/): Highest Value over period
+46. **MAX** [Tulip](https://tulipindicators.org/max): Highest Value over period
 $MAX = \max(x_t, x_{t-1}, \ldots, x_{t-n+1})$
 
-47. **MIN** [TA-Lib](https://ta-lib.org/functions/min/): Lowest Value over period
+47. **MIN** [Tulip](https://tulipindicators.org/min): Lowest Value over period
 $MIN = \min(x_t, x_{t-1}, \ldots, x_{t-n+1})$
 
-48. **MAXINDEX** [TA-Lib](https://ta-lib.org/functions/maxindex/): Index of Highest Value
+48. **MAXINDEX** [Tulip](https://tulipindicators.org/max): Index of Highest Value
 Position $i$ where $x_i = \max(x)$ within the window.
 
-49. **MININDEX** [TA-Lib](https://ta-lib.org/functions/minindex/): Index of Lowest Value
+49. **MININDEX** [Tulip](https://tulipindicators.org/min): Index of Lowest Value
 Position $i$ where $x_i = \min(x)$ within the window.
 
 ### Math Transform
