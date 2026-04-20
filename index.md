@@ -146,15 +146,15 @@ Candlestick pattern functions return `LIST<INTEGER>` (scalar) or `INTEGER` (wind
 | 116 | Math | `t_sqrt` | Square Root | (values) | DOUBLE |
 | 117 | Math | `t_tan` | Tangent | (values) | DOUBLE |
 | 118 | Math | `t_tanh` | Hyperbolic Tangent | (values) | DOUBLE |
-| | **Multi-Output** (scalar only, return `LIST<STRUCT>`) | | | | |
-| 119 | Multi | `t_macd` | MACD | (values, fast, slow, signal) | STRUCT(macd, signal, hist) |
-| 120 | Multi | `t_bbands` | Bollinger Bands | (values, period, devup, devdn, matype) | STRUCT(upper, middle, lower) |
-| 121 | Multi | `t_stoch` | Stochastic | (high, low, close, fastK, slowK, slowKMA, slowD, slowDMA) | STRUCT(slowk, slowd) |
-| 122 | Multi | `t_aroon` | Aroon | (high, low, period) | STRUCT(aroon_down, aroon_up) |
-| 123 | Multi | `t_minmax` | Min/Max over period | (values, period) | STRUCT(min, max) |
-| 124 | Multi | `t_mama` | MESA Adaptive Moving Average | (values, fastlimit, slowlimit) | STRUCT(mama, fama) |
-| 125 | Multi | `t_ht_phasor` | Hilbert Transform — Phasor | (values) | STRUCT(inphase, quadrature) |
-| 126 | Multi | `t_ht_sine` | Hilbert Transform — SineWave | (values) | STRUCT(sine, leadsine) |
+| | **Multi-Output** (scalar returns `LIST<STRUCT>`, window returns `STRUCT`) | | | | |
+| 119 | Multi | `t_macd` / `ta_macd` | MACD | (values, fast, slow, signal) | STRUCT(macd, signal, hist) |
+| 120 | Multi | `t_bbands` / `ta_bbands` | Bollinger Bands | (values, period, devup, devdn, matype) | STRUCT(upper, middle, lower) |
+| 121 | Multi | `t_stoch` / `ta_stoch` | Stochastic | (high, low, close, fastK, slowK, slowKMA, slowD, slowDMA) | STRUCT(slowk, slowd) |
+| 122 | Multi | `t_aroon` / `ta_aroon` | Aroon | (high, low, period) | STRUCT(aroon_down, aroon_up) |
+| 123 | Multi | `t_minmax` / `ta_minmax` | Min/Max over period | (values, period) | STRUCT(min, max) |
+| 124 | Multi | `t_mama` / `ta_mama` | MESA Adaptive Moving Average | (values, fastlimit, slowlimit) | STRUCT(mama, fama) |
+| 125 | Multi | `t_ht_phasor` / `ta_ht_phasor` | Hilbert Transform — Phasor | (values) | STRUCT(inphase, quadrature) |
+| 126 | Multi | `t_ht_sine` / `ta_ht_sine` | Hilbert Transform — SineWave | (values) | STRUCT(sine, leadsine) |
 
 ---
 
@@ -1004,15 +1004,19 @@ Element-wise mathematical functions. No `time_period` parameter.
 
 ## 10. Multi-Output Functions
 
-These functions return a `LIST<STRUCT>` where each struct contains multiple named output fields. The scalar form only — there is no `ta_` window form for multi-output functions.
+These functions return multiple named output fields per computation.
+
+- **Scalar** (`t_` prefix): returns `LIST<STRUCT>` — one struct per input element.
+- **Window** (`ta_` prefix): returns `STRUCT` — one struct per row, use with `OVER (...)`. Access fields with dot notation: `ta_macd(...).macd`.
 
 ---
 
-### t_macd
+### t_macd / ta_macd
 
 Moving Average Convergence/Divergence.
 
-**Scalar:** `t_macd(prices LIST<DOUBLE>, fast_period INTEGER, slow_period INTEGER, signal_period INTEGER) -> LIST<STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)>`
+**Scalar:** `t_macd(prices LIST<DOUBLE>, fast_period INTEGER, slow_period INTEGER, signal_period INTEGER) -> LIST<STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)>`  
+**Window:** `ta_macd(price DOUBLE, fast_period INTEGER, slow_period INTEGER, signal_period INTEGER) OVER (...) -> STRUCT(macd DOUBLE, signal DOUBLE, hist DOUBLE)`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -1032,11 +1036,12 @@ GROUP BY symbol;
 
 ---
 
-### t_bbands
+### t_bbands / ta_bbands
 
 Bollinger Bands.
 
-**Scalar:** `t_bbands(prices LIST<DOUBLE>, time_period INTEGER, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INTEGER) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`
+**Scalar:** `t_bbands(prices LIST<DOUBLE>, time_period INTEGER, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INTEGER) -> LIST<STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)>`  
+**Window:** `ta_bbands(price DOUBLE, time_period INTEGER, nb_dev_up DOUBLE, nb_dev_dn DOUBLE, ma_type INTEGER) OVER (...) -> STRUCT(upper DOUBLE, middle DOUBLE, lower DOUBLE)`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -1057,11 +1062,12 @@ GROUP BY symbol;
 
 ---
 
-### t_stoch
+### t_stoch / ta_stoch
 
 Stochastic Oscillator.
 
-**Scalar:** `t_stoch(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, fastk_period INTEGER, slowk_period INTEGER, slowk_matype INTEGER, slowd_period INTEGER, slowd_matype INTEGER) -> LIST<STRUCT(slowk DOUBLE, slowd DOUBLE)>`
+**Scalar:** `t_stoch(high LIST<DOUBLE>, low LIST<DOUBLE>, close LIST<DOUBLE>, fastk_period INTEGER, slowk_period INTEGER, slowk_matype INTEGER, slowd_period INTEGER, slowd_matype INTEGER) -> LIST<STRUCT(slowk DOUBLE, slowd DOUBLE)>`  
+**Window:** `ta_stoch(high DOUBLE, low DOUBLE, close DOUBLE, fastk_period INTEGER, slowk_period INTEGER, slowk_matype INTEGER, slowd_period INTEGER, slowd_matype INTEGER) OVER (...) -> STRUCT(slowk DOUBLE, slowd DOUBLE)`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -1078,11 +1084,12 @@ Stochastic Oscillator.
 
 ---
 
-### t_aroon
+### t_aroon / ta_aroon
 
 Aroon Indicator.
 
-**Scalar:** `t_aroon(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)>`
+**Scalar:** `t_aroon(high LIST<DOUBLE>, low LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)>`  
+**Window:** `ta_aroon(high DOUBLE, low DOUBLE, time_period INTEGER) OVER (...) -> STRUCT(aroon_down DOUBLE, aroon_up DOUBLE)`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -1094,11 +1101,12 @@ Aroon Indicator.
 
 ---
 
-### t_minmax
+### t_minmax / ta_minmax
 
 Lowest and highest values over a rolling window in a single pass.
 
-**Scalar:** `t_minmax(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(min DOUBLE, max DOUBLE)>`
+**Scalar:** `t_minmax(prices LIST<DOUBLE>, time_period INTEGER) -> LIST<STRUCT(min DOUBLE, max DOUBLE)>`  
+**Window:** `ta_minmax(price DOUBLE, time_period INTEGER) OVER (...) -> STRUCT(min DOUBLE, max DOUBLE)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -1109,11 +1117,12 @@ Lowest and highest values over a rolling window in a single pass.
 
 ---
 
-### t_mama
+### t_mama / ta_mama
 
 MESA Adaptive Moving Average.
 
-**Scalar:** `t_mama(prices LIST<DOUBLE>, fast_limit DOUBLE, slow_limit DOUBLE) -> LIST<STRUCT(mama DOUBLE, fama DOUBLE)>`
+**Scalar:** `t_mama(prices LIST<DOUBLE>, fast_limit DOUBLE, slow_limit DOUBLE) -> LIST<STRUCT(mama DOUBLE, fama DOUBLE)>`  
+**Window:** `ta_mama(price DOUBLE, fast_limit DOUBLE, slow_limit DOUBLE) OVER (...) -> STRUCT(mama DOUBLE, fama DOUBLE)`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -1125,11 +1134,12 @@ MESA Adaptive Moving Average.
 
 ---
 
-### t_ht_phasor
+### t_ht_phasor / ta_ht_phasor
 
 Hilbert Transform — Phasor Components.
 
-**Scalar:** `t_ht_phasor(prices LIST<DOUBLE>) -> LIST<STRUCT(inphase DOUBLE, quadrature DOUBLE)>`
+**Scalar:** `t_ht_phasor(prices LIST<DOUBLE>) -> LIST<STRUCT(inphase DOUBLE, quadrature DOUBLE)>`  
+**Window:** `ta_ht_phasor(price DOUBLE) OVER (...) -> STRUCT(inphase DOUBLE, quadrature DOUBLE)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -1139,11 +1149,12 @@ Hilbert Transform — Phasor Components.
 
 ---
 
-### t_ht_sine
+### t_ht_sine / ta_ht_sine
 
 Hilbert Transform — SineWave Indicator.
 
-**Scalar:** `t_ht_sine(prices LIST<DOUBLE>) -> LIST<STRUCT(sine DOUBLE, leadsine DOUBLE)>`
+**Scalar:** `t_ht_sine(prices LIST<DOUBLE>) -> LIST<STRUCT(sine DOUBLE, leadsine DOUBLE)>`  
+**Window:** `ta_ht_sine(price DOUBLE) OVER (...) -> STRUCT(sine DOUBLE, leadsine DOUBLE)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -1178,10 +1189,10 @@ SELECT
 FROM prices;
 ```
 
-### Unpacking multi-output structs
+### Unpacking multi-output structs (scalar)
 
 ```sql
--- Unpack MACD struct fields
+-- Unpack MACD struct fields from scalar form
 SELECT
     symbol,
     ts,
@@ -1192,6 +1203,24 @@ FROM (
     SELECT symbol, unnest(t_macd(list(close ORDER BY ts), 12, 26, 9)) AS r
     FROM prices
     GROUP BY symbol
+);
+```
+
+### Multi-output window form — STRUCT per row
+
+```sql
+-- MACD with dot-notation field access
+SELECT symbol, ts, close, m.macd, m.signal, m.hist
+FROM (
+    SELECT *, ta_macd(close, 12, 26, 9) OVER (PARTITION BY symbol ORDER BY ts) AS m
+    FROM prices
+);
+
+-- Bollinger Bands
+SELECT ts, b.upper, b.middle, b.lower
+FROM (
+    SELECT *, ta_bbands(close, 20, 2.0, 2.0, 0) OVER (ORDER BY ts) AS b
+    FROM prices
 );
 ```
 
