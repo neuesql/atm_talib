@@ -303,6 +303,168 @@ Every indicator is available in two forms:
 
 ---
 
+## Function Details
+
+### Overlap Studies
+
+- **sma** — Simple Moving Average: `sum(close, n) / n`
+- **ema** — Exponential Moving Average: `close * k + ema_prev * (1 - k)`, where `k = 2 / (n + 1)`
+- **wma** — Weighted Moving Average: `sum(close_i * weight_i) / sum(weights)`, weights linearly increase
+- **dema** — Double EMA: `2 * EMA(n) - EMA(EMA(n))`
+- **tema** — Triple EMA: `3 * EMA - 3 * EMA(EMA) + EMA(EMA(EMA))`
+- **trima** — Triangular Moving Average: `SMA(SMA(n))`
+- **kama** — Kaufman Adaptive MA: adapts smoothing constant based on price efficiency ratio
+- **midpoint** — Midpoint over period: `(max(close, n) + min(close, n)) / 2`
+- **midprice** — Midpoint Price: `(highest_high(n) + lowest_low(n)) / 2`
+
+### Momentum Indicators
+
+- **rsi** — Relative Strength Index: `100 - 100 / (1 + avg_gain / avg_loss)`
+- **cmo** — Chande Momentum Oscillator: `(sum_up - sum_down) / (sum_up + sum_down) * 100`
+- **mom** — Momentum: `close - close[n]`
+- **roc** — Rate of Change: `(close - close[n]) / close[n] * 100`
+- **rocp** — Rate of Change Percentage: `(close - close[n]) / close[n]`
+- **rocr** — Rate of Change Ratio: `close / close[n]`
+- **rocr100** — Rate of Change Ratio x100: `close / close[n] * 100`
+- **trix** — Triple Smooth EMA ROC: 1-day percent change of triple-smoothed EMA
+- **willr** — Williams %R: `(highest_high - close) / (highest_high - lowest_low) * -100`
+- **cci** — Commodity Channel Index: `(tp - sma(tp)) / (0.015 * mean_deviation)`
+- **adx** — Average Directional Index: smoothed average of DX over n periods
+- **adxr** — ADX Rating: `(adx + adx[n]) / 2`
+- **dx** — Directional Movement Index: `|+DI - -DI| / (+DI + -DI) * 100`
+- **plus_di** — Plus Directional Indicator: `smoothed(+DM) / ATR * 100`
+- **minus_di** — Minus Directional Indicator: `smoothed(-DM) / ATR * 100`
+- **plus_dm** — Plus Directional Movement: `high - prev_high` if positive and > `prev_low - low`
+- **minus_dm** — Minus Directional Movement: `prev_low - low` if positive and > `high - prev_high`
+
+### Volume Indicators
+
+- **ad** — Chaikin A/D Line: `cumsum(((close - low) - (high - close)) / (high - low) * volume)`
+
+### Volatility
+
+- **atr** — Average True Range: smoothed average of `true_range` over n periods
+- **natr** — Normalized ATR: `ATR / close * 100`
+- **trange** — True Range: `max(high - low, |high - prev_close|, |low - prev_close|)`
+
+### Price Transform
+
+- **avgprice** — Average Price: `(open + high + low + close) / 4`
+- **bop** — Balance of Power: `(close - open) / (high - low)`
+- **medprice** — Median Price: `(high + low) / 2`
+- **typprice** — Typical Price: `(high + low + close) / 3`
+- **wclprice** — Weighted Close: `(high + low + 2 * close) / 4`
+
+### Cycle Indicators
+
+- **ht_dcperiod** — Dominant Cycle Period: Hilbert Transform-derived dominant cycle length
+- **ht_dcphase** — Dominant Cycle Phase: phase angle of the dominant cycle (degrees)
+- **ht_trendline** — Instantaneous Trendline: Hilbert Transform smoothed trendline
+- **ht_trendmode** — Trend vs Cycle Mode: returns 1 (trending) or 0 (cycling)
+
+### Statistics
+
+- **linearreg** — Linear Regression: endpoint value of best-fit line over n periods
+- **linearreg_angle** — Linear Reg Angle: `atan(slope)` in degrees
+- **linearreg_intercept** — Linear Reg Intercept: y-intercept of best-fit line
+- **linearreg_slope** — Linear Reg Slope: slope of best-fit line over n periods
+- **tsf** — Time Series Forecast: projected next value from linear regression
+- **sum** — Rolling Sum: `sum(values, n)`
+- **max** — Highest Value: `max(values, n)`
+- **min** — Lowest Value: `min(values, n)`
+- **maxindex** — Index of Highest: position of max value within the window
+- **minindex** — Index of Lowest: position of min value within the window
+
+### Math Transform
+
+- **acos** — Arc Cosine: `acos(x)`
+- **asin** — Arc Sine: `asin(x)`
+- **atan** — Arc Tangent: `atan(x)`
+- **ceil** — Ceiling: smallest integer >= x
+- **cos** — Cosine: `cos(x)`
+- **cosh** — Hyperbolic Cosine: `cosh(x)`
+- **exp** — Exponential: `e^x`
+- **floor** — Floor: largest integer <= x
+- **ln** — Natural Logarithm: `ln(x)`
+- **log10** — Base-10 Logarithm: `log10(x)`
+- **sin** — Sine: `sin(x)`
+- **sinh** — Hyperbolic Sine: `sinh(x)`
+- **sqrt** — Square Root: `sqrt(x)`
+- **tan** — Tangent: `tan(x)`
+- **tanh** — Hyperbolic Tangent: `tanh(x)`
+
+### Pattern Recognition
+
+All candlestick patterns take (open, high, low, close) and return `100` (bullish), `-100` (bearish), or `0` (no pattern).
+
+- **cdl2crows** — Two Crows: bearish reversal, two black candles gapping above uptrend
+- **cdl3blackcrows** — Three Black Crows: three consecutive long bearish candles
+- **cdl3inside** — Three Inside Up/Down: reversal confirmed by third candle breaking first candle's range
+- **cdl3linestrike** — Three-Line Strike: three same-direction candles followed by a strike candle
+- **cdl3outside** — Three Outside Up/Down: engulfing pattern confirmed by third candle
+- **cdl3starsinsouth** — Three Stars In The South: three declining bearish candles with shrinking bodies
+- **cdl3whitesoldiers** — Three Advancing White Soldiers: three consecutive long bullish candles
+- **cdladvanceblock** — Advance Block: three bullish candles with shrinking bodies (weakening)
+- **cdlbelthold** — Belt-hold: long candle opening at its extreme (marubozu-like)
+- **cdlbreakaway** — Breakaway: gap followed by three candles, then reversal closing the gap
+- **cdlclosingmarubozu** — Closing Marubozu: candle with no shadow on the closing side
+- **cdlconcealbabyswall** — Concealing Baby Swallow: four-candle bearish pattern with harami
+- **cdlcounterattack** — Counterattack: two opposite candles with same close
+- **cdldoji** — Doji: open and close are virtually the same
+- **cdldojistar** — Doji Star: doji gapping away from previous candle
+- **cdldragonflydoji** — Dragonfly Doji: doji with long lower shadow, no upper shadow
+- **cdlengulfing** — Engulfing: second candle completely engulfs the first
+- **cdlgapsidesidewhite** — Gap Side-by-Side White: two white candles of similar size after a gap
+- **cdlgravestonedoji** — Gravestone Doji: doji with long upper shadow, no lower shadow
+- **cdlhammer** — Hammer: small body at top, long lower shadow (2x body)
+- **cdlhangingman** — Hanging Man: hammer shape appearing in uptrend (bearish)
+- **cdlharami** — Harami: small candle contained within previous candle's body
+- **cdlharamicross** — Harami Cross: harami where second candle is a doji
+- **cdlhighwave** — High-Wave Candle: very long upper and lower shadows, small body
+- **cdlhikkake** — Hikkake: inside bar breakout failure pattern
+- **cdlhikkakemod** — Modified Hikkake: hikkake confirmed by subsequent price action
+- **cdlhomingpigeon** — Homing Pigeon: two bearish candles, second inside first (bullish)
+- **cdlidentical3crows** — Identical Three Crows: three black crows each opening at prior close
+- **cdlinneck** — In-Neck: bearish candle followed by small bullish closing near prior low
+- **cdlinvertedhammer** — Inverted Hammer: small body at bottom, long upper shadow
+- **cdlkicking** — Kicking: two opposing marubozu with a gap between
+- **cdlkickingbylength** — Kicking by Length: direction determined by longer marubozu
+- **cdlladderbottom** — Ladder Bottom: four bearish candles then bullish reversal
+- **cdllongleggeddoji** — Long Legged Doji: doji with very long upper and lower shadows
+- **cdllongline** — Long Line Candle: candle with unusually long body
+- **cdlmarubozu** — Marubozu: candle with no shadows (pure body)
+- **cdlmatchinglow** — Matching Low: two bearish candles with same close (support)
+- **cdlonneck** — On-Neck: bearish candle followed by small bullish closing at prior low
+- **cdlpiercing** — Piercing: bullish candle closing above midpoint of prior bearish candle
+- **cdlrickshawman** — Rickshaw Man: long-legged doji with body at center
+- **cdlrisefall3methods** — Rising/Falling Three Methods: trend continuation with small counter-trend candles
+- **cdlseparatinglines** — Separating Lines: two opposite candles opening at same price
+- **cdlshootingstar** — Shooting Star: inverted hammer in uptrend (bearish reversal)
+- **cdlshortline** — Short Line Candle: candle with unusually short body
+- **cdlspinningtop** — Spinning Top: small body with upper and lower shadows
+- **cdlstalledpattern** — Stalled Pattern: three bullish candles, third with small body (slowing)
+- **cdlsticksandwich** — Stick Sandwich: two same-close candles sandwiching an opposite candle
+- **cdltakuri** — Takuri: dragonfly doji with very long lower shadow
+- **cdltasukigap** — Tasuki Gap: gap followed by a partial-fill candle (continuation)
+- **cdlthrusting** — Thrusting: bearish candle then bullish closing below midpoint of first
+- **cdltristar** — Tristar: three consecutive dojis with middle gapping (reversal)
+- **cdlunique3river** — Unique 3 River: three-candle bullish reversal at bottom
+- **cdlupsidegap2crows** — Upside Gap Two Crows: two bearish candles gapping above uptrend
+- **cdlxsidegap3methods** — Gap Three Methods: gap followed by opposite candle closing the gap
+
+### Multi-Output
+
+- **macd** — MACD: `macd = EMA(fast) - EMA(slow)`, `signal = EMA(macd, signal_period)`, `hist = macd - signal`
+- **bbands** — Bollinger Bands: `middle = SMA(n)`, `upper = middle + k * stddev`, `lower = middle - k * stddev`
+- **stoch** — Stochastic: `%K = (close - lowest_low) / (highest_high - lowest_low) * 100`, `%D = SMA(%K)`
+- **aroon** — Aroon: `up = (n - bars_since_high) / n * 100`, `down = (n - bars_since_low) / n * 100`
+- **minmax** — Min/Max: lowest and highest values over rolling window in single pass
+- **mama** — MESA Adaptive MA: phase-adaptive moving average with fast/slow limits
+- **ht_phasor** — Hilbert Phasor: in-phase and quadrature components of the dominant cycle
+- **ht_sine** — Hilbert SineWave: sine and lead-sine of the dominant cycle phase
+
+---
+
 ## Usage Patterns
 
 ### Scalar form — aggregate over a group
