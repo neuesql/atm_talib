@@ -272,10 +272,10 @@ $TEMA = 3E_1 - 3E_2 + E_3, \quad E_1 = EMA,\ E_2 = EMA(E_1),\ E_3 = EMA(E_2)$
 6. **TRIMA** [Investopedia](https://www.investopedia.com/terms/t/triangularmoving-average.asp): Triangular Moving Average
 $TRIMA = SMA(SMA(x, m), m), \quad m = \lceil(n+1)/2\rceil$
 
-7. **KAMA** [Wikipedia](https://en.wikipedia.org/wiki/Kaufman%27s_Adaptive_Moving_Average): Kaufman Adaptive Moving Average
+7. **KAMA** [Tulip](https://tulipindicators.org/kama): Kaufman Adaptive Moving Average
 $KAMA_t = KAMA_{t-1} + SC^2 \cdot (x_t - KAMA_{t-1}), \quad SC = ER \cdot (\alpha_f - \alpha_s) + \alpha_s$
 
-8. **MAMA** [Wikipedia](https://en.wikipedia.org/wiki/MESA_Adaptive_Moving_Average): MESA Adaptive Moving Average
+8. **MAMA** [Investopedia](https://www.investopedia.com/terms/m/mesa-adaptive-moving-average.asp): MESA Adaptive Moving Average
 $MAMA_t = MAMA_{t-1} + \alpha_t(x_t - MAMA_{t-1}); \quad FAMA_t = FAMA_{t-1} + 0.5\alpha_t(MAMA_t - FAMA_{t-1})$
 
 9. **MACD** [Wikipedia](https://en.wikipedia.org/wiki/MACD): Moving Average Convergence/Divergence
@@ -302,13 +302,13 @@ $+DM = H_t - H_{t-1} \text{ if } > 0 \text{ and } > (L_{t-1} - L_t), \text{ else
 16. **MINUS_DM** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Minus Directional Movement
 $-DM = L_{t-1} - L_t \text{ if } > 0 \text{ and } > (H_t - H_{t-1}), \text{ else } 0$
 
-17. **AROON** [Wikipedia](https://en.wikipedia.org/wiki/Aroon_indicator): Aroon Indicator
+17. **AROON** [Tulip](https://tulipindicators.org/aroon): Aroon Indicator
 $Up = \frac{n - \text{bars since } H_n}{n} \times 100; \quad Down = \frac{n - \text{bars since } L_n}{n} \times 100$
 
-18. **MIDPOINT** [Investopedia](https://www.investopedia.com/terms/m/midpoint.asp): Midpoint over period
+18. **MIDPOINT** [Investopedia](https://www.investopedia.com/terms/m/midprice.asp): Midpoint over period
 $MID = \frac{\max(x, n) + \min(x, n)}{2}$
 
-19. **MIDPRICE** [Investopedia](https://www.investopedia.com/terms/m/midpoint.asp): Midpoint Price over period
+19. **MIDPRICE** [Investopedia](https://www.investopedia.com/terms/m/midprice.asp): Midpoint Price over period
 $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$
 
 ### Momentum
@@ -505,7 +505,7 @@ See [Candlestick pattern (Wikipedia)](https://en.wikipedia.org/wiki/Candlestick_
 78. **CDLDOJI** [Wikipedia](https://en.wikipedia.org/wiki/Doji): Doji — $|O - C| \approx 0$
 79. **CDLDOJISTAR** [Investopedia](https://www.investopedia.com/terms/d/doji.asp): Doji Star — doji gapping from previous candle
 80. **CDLDRAGONFLYDOJI** [Investopedia](https://www.investopedia.com/terms/d/dragonfly-doji.asp): Dragonfly Doji — long lower shadow, no upper
-81. **CDLENGULFING** [Wikipedia](https://en.wikipedia.org/wiki/Engulfing_pattern): Engulfing — second body fully contains first
+81. **CDLENGULFING** [Investopedia](https://www.investopedia.com/terms/b/bullishengulfingpattern.asp): Engulfing — second body fully contains first
 82. **CDLGAPSIDESIDEWHITE** [Investopedia](https://www.investopedia.com/terms/u/upside-gap-two-crows.asp): Gap Side-by-Side White — two similar candles after gap
 83. **CDLGRAVESTONEDOJI** [Investopedia](https://www.investopedia.com/terms/g/gravestone-doji.asp): Gravestone Doji — long upper shadow, no lower
 84. **CDLHAMMER** [Wikipedia](https://en.wikipedia.org/wiki/Hammer_(candlestick_pattern)): Hammer — small body, lower shadow $\geq 2\times$ body
@@ -527,9 +527,9 @@ See [Candlestick pattern (Wikipedia)](https://en.wikipedia.org/wiki/Candlestick_
 100. **CDLMARUBOZU** [Investopedia](https://www.investopedia.com/terms/m/marubozu.asp): Marubozu — no shadows (pure body)
 101. **CDLMATCHINGLOW** [Investopedia](https://www.investopedia.com/terms/m/matching-low.asp): Matching Low — two bearish with same close
 102. **CDLONNECK** [Investopedia](https://www.investopedia.com/terms/o/on-neck-pattern.asp): On-Neck — bullish closing at prior low
-103. **CDLPIERCING** [Wikipedia](https://en.wikipedia.org/wiki/Piercing_pattern): Piercing — bullish closing above midpoint of prior bearish
+103. **CDLPIERCING** [Investopedia](https://www.investopedia.com/terms/p/piercing-pattern.asp): Piercing — bullish closing above midpoint of prior bearish
 104. **CDLRICKSHAWMAN** [Investopedia](https://www.investopedia.com/terms/r/rickshaw-man.asp): Rickshaw Man — long-legged doji, body at center
-105. **CDLRISEFALL3METHODS** [Wikipedia](https://en.wikipedia.org/wiki/Rising_three_methods): Rising/Falling Three Methods — continuation pattern
+105. **CDLRISEFALL3METHODS** [Investopedia](https://www.investopedia.com/terms/r/rising-three-methods.asp): Rising/Falling Three Methods — continuation pattern
 106. **CDLSEPARATINGLINES** [Investopedia](https://www.investopedia.com/terms/s/separating-lines.asp): Separating Lines — opposite candles, same open
 107. **CDLSHOOTINGSTAR** [Wikipedia](https://en.wikipedia.org/wiki/Shooting_star_(candlestick_pattern)): Shooting Star — inverted hammer in uptrend
 108. **CDLSHORTLINE** [Investopedia](https://www.investopedia.com/terms/s/short-line-candle.asp): Short Line Candle — unusually short body
