@@ -254,78 +254,78 @@ Categories per [Wikipedia: Technical indicator](https://en.wikipedia.org/wiki/Te
 
 ### Trend
 
-1. **SMA** [Wikipedia](https://en.wikipedia.org/wiki/Moving_average#Simple_moving_average): Simple Moving Average
+1. **SMA** [Tulip](https://tulipindicators.org/sma): Simple Moving Average
 $SMA = \frac{1}{n}\sum_{i=0}^{n-1} x_{t-i}$
 
-2. **EMA** [Wikipedia](https://en.wikipedia.org/wiki/Exponential_smoothing): Exponential Moving Average
+2. **EMA** [Tulip](https://tulipindicators.org/ema): Exponential Moving Average
 $EMA_t = \alpha \cdot x_t + (1 - \alpha) \cdot EMA_{t-1}, \quad \alpha = \frac{2}{n+1}$
 
-3. **WMA** [Wikipedia](https://en.wikipedia.org/wiki/Moving_average#Weighted_moving_average): Weighted Moving Average
+3. **WMA** [Tulip](https://tulipindicators.org/wma): Weighted Moving Average
 $WMA = \frac{\sum_{i=0}^{n-1}(n-i) \cdot x_{t-i}}{\sum_{i=1}^{n} i}$
 
-4. **DEMA** [Wikipedia](https://en.wikipedia.org/wiki/Double_exponential_moving_average): Double Exponential Moving Average
+4. **DEMA** [Tulip](https://tulipindicators.org/dema): Double Exponential Moving Average
 $DEMA = 2 \cdot EMA(x, n) - EMA(EMA(x, n), n)$
 
-5. **TEMA** [Wikipedia](https://en.wikipedia.org/wiki/Triple_exponential_moving_average): Triple Exponential Moving Average
+5. **TEMA** [Tulip](https://tulipindicators.org/tema): Triple Exponential Moving Average
 $TEMA = 3E_1 - 3E_2 + E_3, \quad E_1 = EMA,\ E_2 = EMA(E_1),\ E_3 = EMA(E_2)$
 
-6. **TRIMA** [Investopedia](https://www.investopedia.com/terms/t/triangularmoving-average.asp): Triangular Moving Average
+6. **TRIMA** [Tulip](https://tulipindicators.org/trima): Triangular Moving Average
 $TRIMA = SMA(SMA(x, m), m), \quad m = \lceil(n+1)/2\rceil$
 
 7. **KAMA** [Tulip](https://tulipindicators.org/kama): Kaufman Adaptive Moving Average
 $KAMA_t = KAMA_{t-1} + SC^2 \cdot (x_t - KAMA_{t-1}), \quad SC = ER \cdot (\alpha_f - \alpha_s) + \alpha_s$
 
-8. **MAMA** [Investopedia](https://www.investopedia.com/terms/m/mesa-adaptive-moving-average.asp): MESA Adaptive Moving Average
+8. **MAMA** [Wikipedia](https://en.wikipedia.org/wiki/Hilbert_transform): MESA Adaptive Moving Average
 $MAMA_t = MAMA_{t-1} + \alpha_t(x_t - MAMA_{t-1}); \quad FAMA_t = FAMA_{t-1} + 0.5\alpha_t(MAMA_t - FAMA_{t-1})$
 
-9. **MACD** [Wikipedia](https://en.wikipedia.org/wiki/MACD): Moving Average Convergence/Divergence
+9. **MACD** [Tulip](https://tulipindicators.org/macd): Moving Average Convergence/Divergence
 $MACD = EMA(x, f) - EMA(x, s); \quad Signal = EMA(MACD, p); \quad Hist = MACD - Signal$
 
-10. **ADX** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Average Directional Index
+10. **ADX** [Tulip](https://tulipindicators.org/adx): Average Directional Index
 $ADX = SMA(DX, n)$
 
-11. **ADXR** [Investopedia](https://www.investopedia.com/terms/a/adxr.asp): Average Directional Movement Rating
+11. **ADXR** [Tulip](https://tulipindicators.org/adxr): Average Directional Movement Rating
 $ADXR = \frac{ADX_t + ADX_{t-n}}{2}$
 
-12. **DX** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Directional Movement Index
+12. **DX** [Tulip](https://tulipindicators.org/dx): Directional Movement Index
 $DX = \frac{|+DI - (-DI)|}{+DI + (-DI)} \times 100$
 
-13. **PLUS_DI** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Plus Directional Indicator
+13. **PLUS_DI** [Tulip](https://tulipindicators.org/di): Plus Directional Indicator
 $+DI = \frac{Smooth(+DM, n)}{ATR(n)} \times 100$
 
-14. **MINUS_DI** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Minus Directional Indicator
+14. **MINUS_DI** [Tulip](https://tulipindicators.org/di): Minus Directional Indicator
 $-DI = \frac{Smooth(-DM, n)}{ATR(n)} \times 100$
 
-15. **PLUS_DM** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Plus Directional Movement
+15. **PLUS_DM** [Tulip](https://tulipindicators.org/dm): Plus Directional Movement
 $+DM = H_t - H_{t-1} \text{ if } > 0 \text{ and } > (L_{t-1} - L_t), \text{ else } 0$
 
-16. **MINUS_DM** [Wikipedia](https://en.wikipedia.org/wiki/Average_directional_movement_index): Minus Directional Movement
+16. **MINUS_DM** [Tulip](https://tulipindicators.org/dm): Minus Directional Movement
 $-DM = L_{t-1} - L_t \text{ if } > 0 \text{ and } > (H_t - H_{t-1}), \text{ else } 0$
 
 17. **AROON** [Tulip](https://tulipindicators.org/aroon): Aroon Indicator
 $Up = \frac{n - \text{bars since } H_n}{n} \times 100; \quad Down = \frac{n - \text{bars since } L_n}{n} \times 100$
 
-18. **MIDPOINT** [Investopedia](https://www.investopedia.com/terms/m/midprice.asp): Midpoint over period
+18. **MIDPOINT** [Wikipedia](https://en.wikipedia.org/wiki/Mid_price): Midpoint over period
 $MID = \frac{\max(x, n) + \min(x, n)}{2}$
 
-19. **MIDPRICE** [Investopedia](https://www.investopedia.com/terms/m/midprice.asp): Midpoint Price over period
+19. **MIDPRICE** [Wikipedia](https://en.wikipedia.org/wiki/Mid_price): Midpoint Price over period
 $MIDPRICE = \frac{H_{highest}(n) + L_{lowest}(n)}{2}$
 
 ### Momentum
 
-20. **RSI** [Wikipedia](https://en.wikipedia.org/wiki/Relative_strength_index): Relative Strength Index
+20. **RSI** [Tulip](https://tulipindicators.org/rsi): Relative Strength Index
 $RSI = 100 - \frac{100}{1 + \frac{\overline{gain}}{\overline{loss}}}$
 
-21. **STOCH** [Wikipedia](https://en.wikipedia.org/wiki/Stochastic_oscillator): Stochastic Oscillator
+21. **STOCH** [Tulip](https://tulipindicators.org/stoch): Stochastic Oscillator
 $\%K = \frac{C - L_n}{H_n - L_n} \times 100; \quad \%D = SMA(\%K)$
 
-22. **CMO** [Investopedia](https://www.investopedia.com/terms/c/chandemomentumoscillator.asp): Chande Momentum Oscillator
+22. **CMO** [Tulip](https://tulipindicators.org/cmo): Chande Momentum Oscillator
 $CMO = \frac{\sum up - \sum down}{\sum up + \sum down} \times 100$
 
-23. **MOM** [Investopedia](https://www.investopedia.com/terms/m/momentum.asp): Momentum
+23. **MOM** [Tulip](https://tulipindicators.org/mom): Momentum
 $MOM = x_t - x_{t-n}$
 
-24. **ROC** [Wikipedia](https://en.wikipedia.org/wiki/Momentum_(technical_analysis)): Rate of Change
+24. **ROC** [Tulip](https://tulipindicators.org/roc): Rate of Change
 $ROC = \frac{x_t - x_{t-n}}{x_{t-n}} \times 100$
 
 25. **ROCP** [Tulip](https://tulipindicators.org/roc): Rate of Change (Percentage)
@@ -337,35 +337,35 @@ $ROCR = \frac{x_t}{x_{t-n}}$
 27. **ROCR100** [Tulip](https://tulipindicators.org/rocr): Rate of Change (Ratio x100)
 $ROCR100 = \frac{x_t}{x_{t-n}} \times 100$
 
-28. **TRIX** [Wikipedia](https://en.wikipedia.org/wiki/Trix_(technical_analysis)): Triple Smooth EMA Rate of Change
+28. **TRIX** [Tulip](https://tulipindicators.org/trix): Triple Smooth EMA Rate of Change
 $TRIX = \frac{E_3(t) - E_3(t-1)}{E_3(t-1)} \times 100, \quad E_3 = EMA(EMA(EMA(x)))$
 
-29. **WILLR** [Wikipedia](https://en.wikipedia.org/wiki/Williams_%25R): Williams %R
+29. **WILLR** [Tulip](https://tulipindicators.org/willr): Williams %R
 $\%R = \frac{H_n - C}{H_n - L_n} \times (-100)$
 
-30. **CCI** [Wikipedia](https://en.wikipedia.org/wiki/Commodity_channel_index): Commodity Channel Index
+30. **CCI** [Tulip](https://tulipindicators.org/cci): Commodity Channel Index
 $CCI = \frac{TP - SMA(TP, n)}{0.015 \cdot MD}, \quad TP = \frac{H+L+C}{3}$
 
-31. **BOP** [Investopedia](https://www.investopedia.com/terms/b/balanceofpower.asp): Balance of Power
+31. **BOP** [Tulip](https://tulipindicators.org/bop): Balance of Power
 $BOP = \frac{C - O}{H - L}$
 
 ### Volume
 
-32. **AD** [Wikipedia](https://en.wikipedia.org/wiki/Accumulation/distribution_index): Chaikin A/D Line
+32. **AD** [Tulip](https://tulipindicators.org/ad): Chaikin A/D Line
 $AD = \sum \frac{(C - L) - (H - C)}{H - L} \times V$
 
 ### Volatility
 
-33. **ATR** [Wikipedia](https://en.wikipedia.org/wiki/Average_true_range): Average True Range
+33. **ATR** [Tulip](https://tulipindicators.org/atr): Average True Range
 $ATR = Wilder\_Smooth(TR, n)$
 
-34. **NATR** [Investopedia](https://www.investopedia.com/terms/a/atr.asp): Normalized Average True Range
+34. **NATR** [Tulip](https://tulipindicators.org/natr): Normalized Average True Range
 $NATR = \frac{ATR}{C} \times 100$
 
-35. **TRANGE** [Wikipedia](https://en.wikipedia.org/wiki/Average_true_range): True Range
+35. **TRANGE** [Tulip](https://tulipindicators.org/tr): True Range
 $TR = \max(H - L,\ |H - C_{t-1}|,\ |L - C_{t-1}|)$
 
-36. **BBANDS** [Wikipedia](https://en.wikipedia.org/wiki/Bollinger_Bands): Bollinger Bands
+36. **BBANDS** [Tulip](https://tulipindicators.org/bbands): Bollinger Bands
 $Mid = SMA(x, n); \quad Upper = Mid + k\sigma; \quad Lower = Mid - k\sigma$
 
 37. **MINMAX** [Tulip](https://tulipindicators.org/min): Min/Max over period
@@ -379,7 +379,7 @@ $AVGPRICE = \frac{O + H + L + C}{4}$
 39. **MEDPRICE** [Tulip](https://tulipindicators.org/medprice): Median Price
 $MEDPRICE = \frac{H + L}{2}$
 
-40. **TYPPRICE** [Wikipedia](https://en.wikipedia.org/wiki/Typical_price): Typical Price
+40. **TYPPRICE** [Tulip](https://tulipindicators.org/typprice): Typical Price
 $TYPPRICE = \frac{H + L + C}{3}$
 
 41. **WCLPRICE** [Tulip](https://tulipindicators.org/wcprice): Weighted Close Price
@@ -407,19 +407,19 @@ $sine = \sin(\phi); \quad leadsine = \sin(\phi + \pi/4)$ where $\phi$ = dominant
 
 ### Statistics
 
-40. **LINEARREG** [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression): Linear Regression
+40. **LINEARREG** [Tulip](https://tulipindicators.org/linreg): Linear Regression
 $\hat{y}_t = b_0 + b_1 \cdot t$
 
-41. **LINEARREG_ANGLE** [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression): Linear Regression Angle
+41. **LINEARREG_ANGLE** [Tulip](https://tulipindicators.org/linreg): Linear Regression Angle
 $\theta = \arctan(b_1)$ in degrees
 
-42. **LINEARREG_INTERCEPT** [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression): Linear Regression Intercept
+42. **LINEARREG_INTERCEPT** [Tulip](https://tulipindicators.org/linregintercept): Linear Regression Intercept
 $b_0$ of best-fit line $y = b_0 + b_1 t$
 
-43. **LINEARREG_SLOPE** [Wikipedia](https://en.wikipedia.org/wiki/Linear_regression): Linear Regression Slope
+43. **LINEARREG_SLOPE** [Tulip](https://tulipindicators.org/linregslope): Linear Regression Slope
 $b_1 = \frac{n\sum ty - \sum t \sum y}{n\sum t^2 - (\sum t)^2}$
 
-44. **TSF** [Investopedia](https://www.investopedia.com/terms/t/time-series-forecast.asp): Time Series Forecast
+44. **TSF** [Tulip](https://tulipindicators.org/tsf): Time Series Forecast
 $TSF = b_0 + b_1 \cdot (n + 1)$
 
 45. **SUM** [Tulip](https://tulipindicators.org/sum): Rolling Summation
@@ -527,7 +527,7 @@ See [Candlestick pattern (Wikipedia)](https://en.wikipedia.org/wiki/Candlestick_
 100. **CDLMARUBOZU** [Investopedia](https://www.investopedia.com/terms/m/marubozu.asp): Marubozu — no shadows (pure body)
 101. **CDLMATCHINGLOW** [Investopedia](https://www.investopedia.com/terms/m/matching-low.asp): Matching Low — two bearish with same close
 102. **CDLONNECK** [Investopedia](https://www.investopedia.com/terms/o/on-neck-pattern.asp): On-Neck — bullish closing at prior low
-103. **CDLPIERCING** [Investopedia](https://www.investopedia.com/terms/p/piercing-pattern.asp): Piercing — bullish closing above midpoint of prior bearish
+103. **CDLPIERCING** [Wikipedia](https://en.wikipedia.org/wiki/Candlestick_pattern): Piercing — bullish closing above midpoint of prior bearish
 104. **CDLRICKSHAWMAN** [Investopedia](https://www.investopedia.com/terms/r/rickshaw-man.asp): Rickshaw Man — long-legged doji, body at center
 105. **CDLRISEFALL3METHODS** [Investopedia](https://www.investopedia.com/terms/r/rising-three-methods.asp): Rising/Falling Three Methods — continuation pattern
 106. **CDLSEPARATINGLINES** [Investopedia](https://www.investopedia.com/terms/s/separating-lines.asp): Separating Lines — opposite candles, same open
