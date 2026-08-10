@@ -1,0 +1,40 @@
+name: Build & Test (Distribution)
+
+on:
+  push:
+    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5]
+  pull_request:
+    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5]
+  workflow_dispatch:
+    inputs:
+      duckdb_version:
+        description: "DuckDB version tag (blank = branch default)"
+        required: false
+        default: ""
+      ci_tools_version:
+        description: "extension-ci-tools input (blank = branch default; must be compatible with the pinned uses: ref)"
+        required: false
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}
+  cancel-in-progress: true
+
+jobs:
+  duckdb-stable-build:
+    name: Build extension binaries
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@v1.5.5
+    with:
+      duckdb_version: ${{ inputs.duckdb_version || vars.DUCKDB_VERSION || 'v1.5.5' }}
+      ci_tools_version: ${{ inputs.ci_tools_version || vars.CI_TOOLS_VERSION || 'v1.5.5' }}
+      extension_name: talib
+      exclude_archs: windows_amd64;windows_amd64_mingw;windows_amd64_rtools;wasm_mvp;wasm_eh;wasm_threads
+
+  code-quality:
+    name: Code quality (format + tidy)
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@v1.5.5
+    with:
+      duckdb_version: ${{ inputs.duckdb_version || vars.DUCKDB_VERSION || 'v1.5.5' }}
+      ci_tools_version: ${{ inputs.ci_tools_version || vars.CI_TOOLS_VERSION || 'v1.5.5' }}
+      extension_name: talib
+      format_checks: 'format;tidy'
