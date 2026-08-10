@@ -1,6 +1,6 @@
 # name: test/sql/test_overlap.test
 # description: Test TA-Lib aggregate functions with OVER() window clauses
-# group: [talib]
+# group: [sql]
 
 require talib
 

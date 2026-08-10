@@ -1,6 +1,6 @@
 # name: test/sql/test_multi_output.test
 # description: Test multi-output TA-Lib functions
-# group: [talib]
+# group: [sql]
 
 require talib
 
