@@ -41,11 +41,11 @@ Confirm CI is green on the new branch, then follow "Publishing". If this new ver
 
 ## Publishing (self-hosted Pages + GitHub Release)
 
-Automatic: pushing to a `v1.5.*` branch runs `Build & Test (Distribution)`; on success, `deploy.yml` (on `main`) gzips the binaries into `gh-pages` under `/<version>/<platform>/talib.duckdb_extension.gz` (other versions preserved) and creates/updates the GitHub Release tagged `duckdb-<version>`.
+Automatic: pushing to a `v1.5.*` branch runs `Build & Test (Distribution)`; on success, `deploy.yml` (on `main`) gzips the binaries into `gh-pages` under `/<version>/<platform>/talib.duckdb_extension.gz` (other versions preserved) and creates/updates the GitHub Release tagged `<version>` (e.g. `v1.5.2`).
 
 The published `<version>` is derived from the built artifact names (`talib-<version>-extension-<arch>`), not from the branch name — so the gh-pages directory and release tag always match the DuckDB version the binary was actually built for, even if an override (below) changed it.
 
-Release tags are `duckdb-vX.Y.Z` (deliberately distinct from the `vX.Y.Z` branch names, to avoid ambiguous git refs).
+Release tags are the bare `vX.Y.Z`, matching the DuckDB version so a client can select the release by version. This intentionally coexists with the same-named `vX.Y.Z` **branch**: git resolves a bare `v1.5.2` to the *tag*, so use `git switch v1.5.2` (not `git checkout v1.5.2`) when you mean the branch.
 
 Manual redeploy: *Actions → Deploy Extension Binaries → Run workflow*, supplying only the build `run_id` (the version is auto-derived from that run's artifacts).
 
