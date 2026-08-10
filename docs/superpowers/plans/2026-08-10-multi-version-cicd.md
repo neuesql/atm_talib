@@ -280,6 +280,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: deploy-gh-pages
