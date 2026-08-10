@@ -9,11 +9,12 @@
 ## ⚡ Quick Install
 
 ```sql
+-- Signed, recommended — no flags needed
 INSTALL talib FROM community;
 LOAD talib;
 
-# OR latest version
-
+-- OR self-hosted custom repo (any supported DuckDB version; unsigned)
+SET allow_unsigned_extensions = true;
 INSTALL talib FROM 'https://neuesql.github.io/atm_talib';
 LOAD talib;
 ```
@@ -130,7 +131,7 @@ SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 
 ## 🖥️ Platforms
 
-> ⚠️ **DuckDB version:** Only **v1.5.2** is supported.
+> ✅ **DuckDB versions:** **v1.5.2, v1.5.3, v1.5.4, v1.5.5** (one release branch each). The custom-repo URL auto-resolves to the version you're running.
 
 | Platform | Architectures |
 |----------|--------------|
