@@ -20,6 +20,7 @@ The mapping is 1:1 — every DuckDB `vX.Y.Z` has a matching `extension-ci-tools`
 
 - The **per-branch default** is the literal in that branch's `distribution.yml` (`|| 'v1.5.x'`) and its `uses: …@v1.5.x` refs.
 - **One-off overrides:** run the workflow via *Actions → Build & Test (Distribution) → Run workflow* and fill `duckdb_version` / `ci_tools_version`.
+- **Repo-wide override caution:** `vars.DUCKDB_VERSION` / `vars.CI_TOOLS_VERSION` apply to *every* branch. Because the deploy derives the published version from the built artifact, an override changes both what a branch builds and where it publishes (a `v1.5.4` branch built with `vars.DUCKDB_VERSION=v1.5.5` publishes under `/v1.5.5/`). Leave these unset unless you intend that.
 - **GitHub Actions limitation:** the `uses:` ref cannot be an expression, so bumping ci-tools *permanently* means editing the literal ref in the file. A one-off `ci_tools_version` input must stay compatible with the pinned ref.
 
 ## Cutting a new DuckDB version branch
@@ -36,18 +37,23 @@ git commit -m "ci($v): pin DuckDB and ci-tools to $v"
 git push -u origin "$v"
 ```
 
-Confirm CI is green on the new branch, then follow "Publishing".
+Confirm CI is green on the new branch, then follow "Publishing". If this new version is now the newest, update the `LATEST_DUCKDB_VERSION` repo variable to it.
 
 ## Publishing (self-hosted Pages + GitHub Release)
 
-Automatic: pushing to a `v1.5.*` branch runs `Build & Test (Distribution)`; on success, `deploy.yml` (on `main`) gzips the binaries into `gh-pages` under `/<version>/<platform>/talib.duckdb_extension.gz` (other versions preserved) and creates/updates the `v1.5.x` GitHub Release.
+Automatic: pushing to a `v1.5.*` branch runs `Build & Test (Distribution)`; on success, `deploy.yml` (on `main`) gzips the binaries into `gh-pages` under `/<version>/<platform>/talib.duckdb_extension.gz` (other versions preserved) and creates/updates the GitHub Release tagged `duckdb-<version>`.
 
-Manual redeploy: *Actions → Deploy Extension Binaries → Run workflow*, supplying `duckdb_version` and the build `run_id`.
+The published `<version>` is derived from the built artifact names (`talib-<version>-extension-<arch>`), not from the branch name — so the gh-pages directory and release tag always match the DuckDB version the binary was actually built for, even if an override (below) changed it.
+
+Release tags are `duckdb-vX.Y.Z` (deliberately distinct from the `vX.Y.Z` branch names, to avoid ambiguous git refs).
+
+Manual redeploy: *Actions → Deploy Extension Binaries → Run workflow*, supplying only the build `run_id` (the version is auto-derived from that run's artifacts).
 
 ## One-time repo setup
 
 1. **Settings → Pages → Source:** *Deploy from a branch* → `gh-pages` / `(root)`. The first successful `deploy.yml` run creates the `gh-pages` branch; set this afterwards.
 2. Confirm **Settings → Actions → General → Workflow permissions** allows *Read and write* (needed for the release + gh-pages push).
+3. **Settings → Secrets and variables → Actions → Variables:** set `LATEST_DUCKDB_VERSION` to the newest supported version (e.g. `v1.5.5`). The release for that version is marked GitHub "Latest"; others are not. Bump this when you cut a newer version branch.
 
 ## Community Extensions (signed) — manual submission
 

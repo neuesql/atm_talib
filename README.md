@@ -9,7 +9,7 @@
 ## ⚡ Quick Install
 
 ```sql
--- Signed, recommended — no flags needed
+-- Signed (once published to community-extensions) — no flags needed
 INSTALL talib FROM community;
 LOAD talib;
 

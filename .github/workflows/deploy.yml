@@ -7,9 +7,6 @@ on:
     branches: [v1.5.2, v1.5.3, v1.5.4, v1.5.5]
   workflow_dispatch:
     inputs:
-      duckdb_version:
-        description: "Version branch to (re)deploy, e.g. v1.5.4"
-        required: true
       run_id:
         description: "Build run id to pull artifacts from (required for manual redeploy)"
         required: true
@@ -31,19 +28,30 @@ jobs:
       - name: Checkout (for build scripts)
         uses: actions/checkout@v4
 
-      - name: Resolve target version
-        id: ver
-        run: |
-          V="${{ github.event.inputs.duckdb_version || github.event.workflow_run.head_branch }}"
-          echo "duckdb_version=$V" >> "$GITHUB_OUTPUT"
-          echo "Resolved version: $V"
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           run-id: ${{ github.event.inputs.run_id || github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve built DuckDB version from artifacts
+        id: ver
+        run: |
+          ver=""
+          for dir in artifacts/talib-*; do
+            [ -d "$dir" ] || continue
+            b="$(basename "$dir")"          # e.g. talib-v1.5.5-extension-linux_amd64
+            tmp="${b#talib-}"               # v1.5.5-extension-linux_amd64
+            ver="${tmp%%-extension-*}"      # v1.5.5
+            break
+          done
+          if [ -z "$ver" ]; then
+            echo "ERROR: could not derive DuckDB version from artifact names under artifacts/" >&2
+            exit 1
+          fi
+          echo "duckdb_version=$ver" >> "$GITHUB_OUTPUT"
+          echo "Resolved built version: $ver"
 
       - name: Build gzipped Pages tree (DuckDB custom-repo layout)
         run: bash scripts/build_pages_site.sh artifacts "${{ steps.ver.outputs.duckdb_version }}" site talib
@@ -74,11 +82,11 @@ jobs:
       - name: Create/update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.ver.outputs.duckdb_version }}
+          tag_name: duckdb-${{ steps.ver.outputs.duckdb_version }}
           target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
           name: "DuckDB TA-Lib Extension (DuckDB ${{ steps.ver.outputs.duckdb_version }})"
           body: |
-            ## Install (signed, recommended)
+            ## Install (signed — once published to community-extensions)
 
             ```sql
             INSTALL talib FROM community;
@@ -97,4 +105,4 @@ jobs:
             - Linux x86_64 (`linux_amd64`), Linux ARM64 (`linux_arm64`)
             - macOS x86_64 (`osx_amd64`), macOS ARM64 (`osx_arm64`)
           files: release_assets/*
-          make_latest: false
+          make_latest: ${{ steps.ver.outputs.duckdb_version == vars.LATEST_DUCKDB_VERSION }}
