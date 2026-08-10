@@ -133,6 +133,15 @@ SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 
 > ✅ **DuckDB versions:** **v1.5.2, v1.5.3, v1.5.4, v1.5.5** (one release branch each). The custom-repo URL auto-resolves to the version you're running.
 
+### Build status
+
+| DuckDB | Build (macOS + Linux) |
+|--------|-----------------------|
+| v1.5.2 | [![v1.5.2](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.2)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.2) |
+| v1.5.3 | [![v1.5.3](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.3)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.3) |
+| v1.5.4 | [![v1.5.4](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.4)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.4) |
+| v1.5.5 | [![v1.5.5](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.5)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.5) |
+
 | Platform | Architectures |
 |----------|--------------|
 | 🐧 Linux | x86_64, aarch64 |
