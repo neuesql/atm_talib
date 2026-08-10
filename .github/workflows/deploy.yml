@@ -1,0 +1,99 @@
+name: Deploy Extension Binaries
+
+on:
+  workflow_run:
+    workflows: ["Build & Test (Distribution)"]
+    types: [completed]
+    branches: [v1.5.2, v1.5.3, v1.5.4, v1.5.5]
+  workflow_dispatch:
+    inputs:
+      duckdb_version:
+        description: "Version branch to (re)deploy, e.g. v1.5.4"
+        required: true
+      run_id:
+        description: "Build run id to pull artifacts from (required for manual redeploy)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish binaries
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout (for build scripts)
+        uses: actions/checkout@v4
+
+      - name: Resolve target version
+        id: ver
+        run: |
+          V="${{ github.event.inputs.duckdb_version || github.event.workflow_run.head_branch }}"
+          echo "duckdb_version=$V" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $V"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          run-id: ${{ github.event.inputs.run_id || github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build gzipped Pages tree (DuckDB custom-repo layout)
+        run: bash scripts/build_pages_site.sh artifacts "${{ steps.ver.outputs.duckdb_version }}" site talib
+
+      - name: Stage GitHub Release assets (raw binaries)
+        run: |
+          mkdir -p release_assets
+          for dir in artifacts/talib-*; do
+            [ -d "$dir" ] || continue
+            arch="${dir##*extension-}"
+            for f in "$dir"/*.duckdb_extension; do
+              [ -f "$f" ] || continue
+              cp "$f" "release_assets/talib-${arch}.duckdb_extension"
+            done
+          done
+          find release_assets -type f | sort
+
+      - name: Publish to gh-pages (preserve other versions)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          keep_files: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: "deploy: talib binaries for ${{ steps.ver.outputs.duckdb_version }}"
+
+      - name: Create/update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.duckdb_version }}
+          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
+          name: "DuckDB TA-Lib Extension (DuckDB ${{ steps.ver.outputs.duckdb_version }})"
+          body: |
+            ## Install (signed, recommended)
+
+            ```sql
+            INSTALL talib FROM community;
+            LOAD talib;
+            ```
+
+            ## Install (self-hosted custom repo, unsigned)
+
+            ```sql
+            SET allow_unsigned_extensions = true;
+            INSTALL talib FROM 'https://neuesql.github.io/atm_talib';
+            LOAD talib;
+            ```
+
+            ## Platforms
+            - Linux x86_64 (`linux_amd64`), Linux ARM64 (`linux_arm64`)
+            - macOS x86_64 (`osx_amd64`), macOS ARM64 (`osx_arm64`)
+          files: release_assets/*
+          make_latest: false
