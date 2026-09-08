@@ -1,4 +1,9 @@
 #include "duckdb.hpp"
+// DuckDB 2.0 split these helper classes out of vector.hpp into common/vector/*
+#include "duckdb/common/vector/flat_vector.hpp"
+#include "duckdb/common/vector/list_vector.hpp"
+#include "duckdb/common/vector/struct_vector.hpp"
+#include "duckdb/common/identifier.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
@@ -18,7 +23,7 @@ namespace duckdb {
 static LogicalType MakeStruct(const vector<pair<string, LogicalType>> &fields) {
   child_list_t<LogicalType> children;
   for (auto &f : fields) {
-    children.push_back(make_pair(f.first, f.second));
+    children.emplace_back(Identifier(f.first), f.second);
   }
   return LogicalType::STRUCT(children);
 }
@@ -85,14 +90,16 @@ struct MultiAggStateStoch {
 // ta_minmax: (DOUBLE, INT) -> STRUCT(min, max)
 // ============================================================
 struct TalibAggMinMax {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggState1);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggState1 *>(state);
-    s->values = nullptr;
-    s->period = 0;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggState1 *>(states[i]);
+      s->values = nullptr;
+      s->period = 0;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -163,13 +170,13 @@ struct TalibAggMinMax {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggState1 *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_min = FlatVector::GetData<double>(*entries[0]);
-    auto data_max = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_min = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_max = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -210,15 +217,17 @@ struct TalibAggMinMax {
 // ta_aroon: (DOUBLE, DOUBLE, INT) -> STRUCT(aroon_down, aroon_up)
 // ============================================================
 struct TalibAggAroon {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateHL);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateHL *>(state);
-    s->high = nullptr;
-    s->low = nullptr;
-    s->period = 0;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateHL *>(states[i]);
+      s->high = nullptr;
+      s->low = nullptr;
+      s->period = 0;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -302,13 +311,13 @@ struct TalibAggAroon {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateHL *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_down = FlatVector::GetData<double>(*entries[0]);
-    auto data_up = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_down = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_up = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -351,13 +360,15 @@ struct TalibAggAroon {
 // ta_ht_phasor: (DOUBLE) -> STRUCT(inphase, quadrature)
 // ============================================================
 struct TalibAggHtPhasor {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateNoPeriod);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateNoPeriod *>(state);
-    s->values = nullptr;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateNoPeriod *>(states[i]);
+      s->values = nullptr;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -418,13 +429,13 @@ struct TalibAggHtPhasor {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateNoPeriod *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_inphase = FlatVector::GetData<double>(*entries[0]);
-    auto data_quadrature = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_inphase = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_quadrature = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -465,13 +476,15 @@ struct TalibAggHtPhasor {
 // ta_ht_sine: (DOUBLE) -> STRUCT(sine, leadsine)
 // ============================================================
 struct TalibAggHtSine {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateNoPeriod);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateNoPeriod *>(state);
-    s->values = nullptr;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateNoPeriod *>(states[i]);
+      s->values = nullptr;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -532,13 +545,13 @@ struct TalibAggHtSine {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateNoPeriod *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_sine = FlatVector::GetData<double>(*entries[0]);
-    auto data_leadsine = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_sine = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_leadsine = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -578,15 +591,17 @@ struct TalibAggHtSine {
 // ta_mama: (DOUBLE, DOUBLE, DOUBLE) -> STRUCT(mama, fama)
 // ============================================================
 struct TalibAggMama {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateMama);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateMama *>(state);
-    s->values = nullptr;
-    s->fast_limit = 0.5;
-    s->slow_limit = 0.05;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateMama *>(states[i]);
+      s->values = nullptr;
+      s->fast_limit = 0.5;
+      s->slow_limit = 0.05;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -666,13 +681,13 @@ struct TalibAggMama {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateMama *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_mama = FlatVector::GetData<double>(*entries[0]);
-    auto data_fama = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_mama = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_fama = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -713,16 +728,18 @@ struct TalibAggMama {
 // ta_macd: (DOUBLE, INT, INT, INT) -> STRUCT(macd, signal, hist)
 // ============================================================
 struct TalibAggMacd {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateMacd);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateMacd *>(state);
-    s->values = nullptr;
-    s->fast_period = 12;
-    s->slow_period = 26;
-    s->signal_period = 9;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateMacd *>(states[i]);
+      s->values = nullptr;
+      s->fast_period = 12;
+      s->slow_period = 26;
+      s->signal_period = 9;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -805,14 +822,14 @@ struct TalibAggMacd {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateMacd *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_macd = FlatVector::GetData<double>(*entries[0]);
-    auto data_signal = FlatVector::GetData<double>(*entries[1]);
-    auto data_hist = FlatVector::GetData<double>(*entries[2]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_macd = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_signal = FlatVector::GetDataMutable<double>(entries[1]);
+    auto data_hist = FlatVector::GetDataMutable<double>(entries[2]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -855,17 +872,19 @@ struct TalibAggMacd {
 // ta_bbands: (DOUBLE, INT, DOUBLE, DOUBLE, INT) -> STRUCT(upper, middle, lower)
 // ============================================================
 struct TalibAggBbands {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateBbands);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateBbands *>(state);
-    s->values = nullptr;
-    s->time_period = 5;
-    s->nb_dev_up = 2.0;
-    s->nb_dev_dn = 2.0;
-    s->ma_type = 0;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateBbands *>(states[i]);
+      s->values = nullptr;
+      s->time_period = 5;
+      s->nb_dev_up = 2.0;
+      s->nb_dev_dn = 2.0;
+      s->ma_type = 0;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -955,14 +974,14 @@ struct TalibAggBbands {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateBbands *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_upper = FlatVector::GetData<double>(*entries[0]);
-    auto data_middle = FlatVector::GetData<double>(*entries[1]);
-    auto data_lower = FlatVector::GetData<double>(*entries[2]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_upper = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_middle = FlatVector::GetDataMutable<double>(entries[1]);
+    auto data_lower = FlatVector::GetDataMutable<double>(entries[2]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -1005,20 +1024,22 @@ struct TalibAggBbands {
 // ta_stoch: (DOUBLE x3, INT x5) -> STRUCT(slowk, slowd)
 // ============================================================
 struct TalibAggStoch {
-  static idx_t StateSize(const AggregateFunction &) {
+  static idx_t StateSize(AggregateStateInput &) {
     return sizeof(MultiAggStateStoch);
   }
 
-  static void Initialize(const AggregateFunction &, data_ptr_t state) {
-    auto s = reinterpret_cast<MultiAggStateStoch *>(state);
-    s->high = nullptr;
-    s->low = nullptr;
-    s->close = nullptr;
-    s->fastk_period = 5;
-    s->slowk_period = 3;
-    s->slowk_matype = 0;
-    s->slowd_period = 3;
-    s->slowd_matype = 0;
+  static void Initialize(AggregateStateInput &, data_ptr_t *states, idx_t count) {
+    for (idx_t i = 0; i < count; i++) {
+      auto s = reinterpret_cast<MultiAggStateStoch *>(states[i]);
+      s->high = nullptr;
+      s->low = nullptr;
+      s->close = nullptr;
+      s->fastk_period = 5;
+      s->slowk_period = 3;
+      s->slowk_matype = 0;
+      s->slowd_period = 3;
+      s->slowd_matype = 0;
+    }
   }
 
   static void Update(Vector inputs[], AggregateInputData &, idx_t input_count,
@@ -1145,13 +1166,13 @@ struct TalibAggStoch {
     }
   }
 
-  static void Finalize(Vector &states_vec, AggregateInputData &, Vector &result,
+  static void Finalize(Vector &states_vec, AggregateFinalizeInputData &, Vector &result,
                        idx_t count, idx_t offset) {
     auto states = FlatVector::GetData<MultiAggStateStoch *>(states_vec);
     auto &entries = StructVector::GetEntries(result);
-    auto data_slowk = FlatVector::GetData<double>(*entries[0]);
-    auto data_slowd = FlatVector::GetData<double>(*entries[1]);
-    auto &rmask = FlatVector::Validity(result);
+    auto data_slowk = FlatVector::GetDataMutable<double>(entries[0]);
+    auto data_slowd = FlatVector::GetDataMutable<double>(entries[1]);
+    auto &rmask = FlatVector::ValidityMutable(result);
 
     for (idx_t i = 0; i < count; i++) {
       auto state = states[i];
@@ -1208,7 +1229,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         MakeStruct(
             {{"min", LogicalType::DOUBLE}, {"max", LogicalType::DOUBLE}}),
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
-        FunctionNullHandling::DEFAULT_NULL_HANDLING, OP::SimpleUpdate, nullptr,
+        FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
     loader.RegisterFunction(func);
   }
@@ -1222,7 +1243,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         MakeStruct({{"aroon_down", LogicalType::DOUBLE},
                     {"aroon_up", LogicalType::DOUBLE}}),
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
-        FunctionNullHandling::DEFAULT_NULL_HANDLING, OP::SimpleUpdate, nullptr,
+        FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
     loader.RegisterFunction(func);
   }
@@ -1236,7 +1257,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::StateSize, OP::Initialize, OP::Update,
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,
-                           OP::SimpleUpdate, nullptr, OP::Destroy);
+                           nullptr, nullptr, OP::Destroy);
     loader.RegisterFunction(func);
   }
 
@@ -1249,7 +1270,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::StateSize, OP::Initialize, OP::Update,
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,
-                           OP::SimpleUpdate, nullptr, OP::Destroy);
+                           nullptr, nullptr, OP::Destroy);
     loader.RegisterFunction(func);
   }
 
@@ -1262,7 +1283,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         MakeStruct(
             {{"mama", LogicalType::DOUBLE}, {"fama", LogicalType::DOUBLE}}),
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
-        FunctionNullHandling::DEFAULT_NULL_HANDLING, OP::SimpleUpdate, nullptr,
+        FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
     loader.RegisterFunction(func);
   }
@@ -1279,7 +1300,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::StateSize, OP::Initialize, OP::Update,
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,
-                           OP::SimpleUpdate, nullptr, OP::Destroy);
+                           nullptr, nullptr, OP::Destroy);
     loader.RegisterFunction(func);
   }
 
@@ -1295,7 +1316,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                     {"middle", LogicalType::DOUBLE},
                     {"lower", LogicalType::DOUBLE}}),
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
-        FunctionNullHandling::DEFAULT_NULL_HANDLING, OP::SimpleUpdate, nullptr,
+        FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
     loader.RegisterFunction(func);
   }
@@ -1311,7 +1332,7 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         MakeStruct(
             {{"slowk", LogicalType::DOUBLE}, {"slowd", LogicalType::DOUBLE}}),
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
-        FunctionNullHandling::DEFAULT_NULL_HANDLING, OP::SimpleUpdate, nullptr,
+        FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
     loader.RegisterFunction(func);
   }

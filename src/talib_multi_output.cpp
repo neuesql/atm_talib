@@ -33,7 +33,7 @@ static inline list_entry_t GetListEntry(DataChunk &args, idx_t col, idx_t row) {
 }
 
 static inline Vector &GetListChild(DataChunk &args, idx_t col) {
-  return ListVector::GetEntry(args.data[col]);
+  return ListVector::GetChildMutable(args.data[col]);
 }
 
 // ============================================================
@@ -48,7 +48,7 @@ static void PackStruct2Result(Vector &result, idx_t idx, int input_size,
                               const double *out2, const string &name1,
                               const string &name2) {
   // Set list entry
-  auto list_data = FlatVector::GetData<list_entry_t>(result);
+  auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
   auto offset = ListVector::GetListSize(result);
   list_data[idx].offset = offset;
   list_data[idx].length = input_size;
@@ -57,14 +57,14 @@ static void PackStruct2Result(Vector &result, idx_t idx, int input_size,
   ListVector::SetListSize(result, offset + input_size);
 
   // Get the struct child vector (the entry of the LIST)
-  auto &struct_vec = ListVector::GetEntry(result);
+  auto &struct_vec = ListVector::GetChildMutable(result);
   auto &entries = StructVector::GetEntries(struct_vec);
 
   // entries[0] = first field, entries[1] = second field
-  auto data0 = FlatVector::GetData<double>(*entries[0]);
-  auto data1 = FlatVector::GetData<double>(*entries[1]);
-  auto &validity0 = FlatVector::Validity(*entries[0]);
-  auto &validity1 = FlatVector::Validity(*entries[1]);
+  auto data0 = FlatVector::GetDataMutable<double>(entries[0]);
+  auto data1 = FlatVector::GetDataMutable<double>(entries[1]);
+  auto &validity0 = FlatVector::ValidityMutable(entries[0]);
+  auto &validity1 = FlatVector::ValidityMutable(entries[1]);
 
   // Fill lookback NULLs
   for (int i = 0; i < out_beg; i++) {
@@ -87,7 +87,7 @@ static void PackStruct2Result(Vector &result, idx_t idx, int input_size,
 static void PackStruct3Result(Vector &result, idx_t idx, int input_size,
                               int out_beg, int out_nb, const double *out1,
                               const double *out2, const double *out3) {
-  auto list_data = FlatVector::GetData<list_entry_t>(result);
+  auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
   auto offset = ListVector::GetListSize(result);
   list_data[idx].offset = offset;
   list_data[idx].length = input_size;
@@ -95,15 +95,15 @@ static void PackStruct3Result(Vector &result, idx_t idx, int input_size,
   ListVector::Reserve(result, offset + input_size);
   ListVector::SetListSize(result, offset + input_size);
 
-  auto &struct_vec = ListVector::GetEntry(result);
+  auto &struct_vec = ListVector::GetChildMutable(result);
   auto &entries = StructVector::GetEntries(struct_vec);
 
-  auto data0 = FlatVector::GetData<double>(*entries[0]);
-  auto data1 = FlatVector::GetData<double>(*entries[1]);
-  auto data2 = FlatVector::GetData<double>(*entries[2]);
-  auto &validity0 = FlatVector::Validity(*entries[0]);
-  auto &validity1 = FlatVector::Validity(*entries[1]);
-  auto &validity2 = FlatVector::Validity(*entries[2]);
+  auto data0 = FlatVector::GetDataMutable<double>(entries[0]);
+  auto data1 = FlatVector::GetDataMutable<double>(entries[1]);
+  auto data2 = FlatVector::GetDataMutable<double>(entries[2]);
+  auto &validity0 = FlatVector::ValidityMutable(entries[0]);
+  auto &validity1 = FlatVector::ValidityMutable(entries[1]);
+  auto &validity2 = FlatVector::ValidityMutable(entries[2]);
 
   for (int i = 0; i < out_beg; i++) {
     validity0.SetInvalid(offset + i);
@@ -374,7 +374,7 @@ static LogicalType
 MakeStructList(const vector<pair<string, LogicalType>> &fields) {
   child_list_t<LogicalType> children;
   for (auto &f : fields) {
-    children.push_back(make_pair(f.first, f.second));
+    children.emplace_back(Identifier(f.first), f.second);
   }
   return LogicalType::LIST(LogicalType::STRUCT(children));
 }

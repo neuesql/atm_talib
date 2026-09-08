@@ -2,6 +2,11 @@
 
 #include "duckdb.hpp"
 #include "duckdb/function/scalar_function.hpp"
+// DuckDB 2.0 split these helper classes out of vector.hpp into common/vector/*
+#include "duckdb/common/vector/flat_vector.hpp"
+#include "duckdb/common/vector/list_vector.hpp"
+#include "duckdb/common/vector/struct_vector.hpp"
+#include "duckdb/common/identifier.hpp"
 
 extern "C" {
 #include "ta_libc.h"

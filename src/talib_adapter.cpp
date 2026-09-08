@@ -1,5 +1,6 @@
 #include "talib_adapter.hpp"
-// list_vector included via duckdb.hpp
+// DuckDB 2.0: ListVector/StructVector/FlatVector come from common/vector/*
+// (pulled in via talib_adapter.hpp). Writes must use *Mutable accessors.
 
 namespace duckdb {
 
@@ -27,16 +28,16 @@ void PackDoubleResult(Vector &result, idx_t idx, int input_size,
                       int out_beg_idx, int out_nb_element,
                       const double *out_array) {
   auto list_size = input_size;
-  auto list_data = FlatVector::GetData<list_entry_t>(result);
+  auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
   list_data[idx].offset = ListVector::GetListSize(result);
   list_data[idx].length = list_size;
 
   ListVector::Reserve(result, list_data[idx].offset + list_size);
   ListVector::SetListSize(result, list_data[idx].offset + list_size);
 
-  auto &child = ListVector::GetEntry(result);
-  auto child_data = FlatVector::GetData<double>(child);
-  auto &child_validity = FlatVector::Validity(child);
+  auto &child = ListVector::GetChildMutable(result);
+  auto child_data = FlatVector::GetDataMutable<double>(child);
+  auto &child_validity = FlatVector::ValidityMutable(child);
 
   auto offset = list_data[idx].offset;
 
@@ -59,16 +60,16 @@ void PackDoubleResult(Vector &result, idx_t idx, int input_size,
 void PackIntResult(Vector &result, idx_t idx, int input_size, int out_beg_idx,
                    int out_nb_element, const int *out_array) {
   auto list_size = input_size;
-  auto list_data = FlatVector::GetData<list_entry_t>(result);
+  auto list_data = FlatVector::GetDataMutable<list_entry_t>(result);
   list_data[idx].offset = ListVector::GetListSize(result);
   list_data[idx].length = list_size;
 
   ListVector::Reserve(result, list_data[idx].offset + list_size);
   ListVector::SetListSize(result, list_data[idx].offset + list_size);
 
-  auto &child = ListVector::GetEntry(result);
-  auto child_data = FlatVector::GetData<int32_t>(child);
-  auto &child_validity = FlatVector::Validity(child);
+  auto &child = ListVector::GetChildMutable(result);
+  auto child_data = FlatVector::GetDataMutable<int32_t>(child);
+  auto &child_validity = FlatVector::ValidityMutable(child);
 
   auto offset = list_data[idx].offset;
 
