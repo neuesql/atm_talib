@@ -1,6 +1,6 @@
 # name: test/sql/test_pattern.test
 # description: Tests for candlestick pattern recognition (CDLDOJI, CDLHAMMER) — pattern P5 INT
-# group: [talib]
+# group: [sql]
 
 require talib
 
