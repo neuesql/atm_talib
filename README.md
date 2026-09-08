@@ -131,7 +131,7 @@ SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 
 ## 🖥️ Platforms
 
-> ✅ **DuckDB versions:** **v1.5.2, v1.5.3, v1.5.4, v1.5.5** (one release branch each). The custom-repo URL auto-resolves to the version you're running.
+> ✅ **DuckDB versions:** **v1.5.2, v1.5.3, v1.5.4, v1.5.5** (stable, one release branch each), plus **v2.0-cyanoptera** (preview, tracks the in-development DuckDB 2.0 line). The custom-repo URL auto-resolves to the version you're running.
 
 ### Build status
 
@@ -141,6 +141,7 @@ SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 | v1.5.3 | [![v1.5.3](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.3)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.3) |
 | v1.5.4 | [![v1.5.4](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.4)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.4) |
 | v1.5.5 | [![v1.5.5](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v1.5.5)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av1.5.5) |
+| v2.0-cyanoptera (preview) | [![v2.0-cyanoptera](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml/badge.svg?branch=v2.0-cyanoptera)](https://github.com/neuesql/atm_talib/actions/workflows/distribution.yml?query=branch%3Av2.0-cyanoptera) |
 
 | Platform | Architectures |
 |----------|--------------|
