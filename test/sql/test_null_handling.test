@@ -1,6 +1,6 @@
 # name: test/sql/test_null_handling.test
 # description: Edge case tests for NULL and boundary inputs
-# group: [talib]
+# group: [sql]
 
 require talib
 

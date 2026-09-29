@@ -1,6 +1,6 @@
 # name: test/sql/test_multi_output_agg.test
 # description: Test multi-output window/aggregate TA-Lib functions
-# group: [talib]
+# group: [sql]
 
 require talib
 

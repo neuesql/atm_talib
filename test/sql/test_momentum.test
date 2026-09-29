@@ -1,6 +1,6 @@
 # name: test/sql/test_momentum.test
 # description: Tests for momentum indicators (RSI, WILLR, CCI) — patterns P1 and P3
-# group: [talib]
+# group: [sql]
 
 require talib
 
