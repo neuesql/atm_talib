@@ -4,11 +4,12 @@
 
 | Branch  | DuckDB (`duckdb_version`) | `extension-ci-tools` (`ci_tools_version` = `uses:` ref) |
 | ------- | ------------------------- | ------------------------------------------------------- |
-| `main`  | `v1.5.5` (newest)         | `v1.5.5`                                                 |
+| `main`  | `v1.5.6` (newest)         | `v1.5.6`                                                 |
 | `v1.5.2`| `v1.5.2`                  | `v1.5.2`                                                 |
 | `v1.5.3`| `v1.5.3`                  | `v1.5.3`                                                 |
 | `v1.5.4`| `v1.5.4`                  | `v1.5.4`                                                 |
 | `v1.5.5`| `v1.5.5`                  | `v1.5.5`                                                 |
+| `v1.5.6`| `v1.5.6`                  | `v1.5.6`                                                 |
 
 The mapping is 1:1 — every DuckDB `vX.Y.Z` has a matching `extension-ci-tools` `vX.Y.Z` branch.
 
