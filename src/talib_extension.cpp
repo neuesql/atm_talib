@@ -16,25 +16,21 @@ void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader);
 void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader);
 
 static void LoadInternal(ExtensionLoader &loader) {
-    RegisterTalibScalarFunctions(loader);
-    RegisterTalibAggregateFunctions(loader);
-    RegisterTalibMultiOutputFunctions(loader);
-    RegisterTalibMultiOutputAggFunctions(loader);
+  RegisterTalibScalarFunctions(loader);
+  RegisterTalibAggregateFunctions(loader);
+  RegisterTalibMultiOutputFunctions(loader);
+  RegisterTalibMultiOutputAggFunctions(loader);
 }
 
-void TalibExtension::Load(ExtensionLoader &loader) {
-    LoadInternal(loader);
-}
+void TalibExtension::Load(ExtensionLoader &loader) { LoadInternal(loader); }
 
-std::string TalibExtension::Name() {
-    return "talib";
-}
+std::string TalibExtension::Name() { return "talib"; }
 
 std::string TalibExtension::Version() const {
 #ifdef EXT_VERSION_TALIB
-    return EXT_VERSION_TALIB;
+  return EXT_VERSION_TALIB;
 #else
-    return "";
+  return "";
 #endif
 }
 
@@ -42,10 +38,7 @@ std::string TalibExtension::Version() const {
 
 extern "C" {
 
-DUCKDB_CPP_EXTENSION_ENTRY(talib, loader) {
-    duckdb::LoadInternal(loader);
-}
-
+DUCKDB_CPP_EXTENSION_ENTRY(talib, loader) { duckdb::LoadInternal(loader); }
 }
 
 #ifndef DUCKDB_EXTENSION_MAIN

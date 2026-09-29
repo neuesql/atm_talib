@@ -1,6 +1,6 @@
 # name: test/sql/test_partition.test
 # description: Test that window functions compute independently per partition
-# group: [talib]
+# group: [sql]
 
 require talib
 
