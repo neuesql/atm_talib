@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["Build & Test (Distribution)"]
     types: [completed]
-    branches: [v1.5.2, v1.5.3, v1.5.4, v1.5.5]
+    branches: [v1.5.2, v1.5.3, v1.5.4, v1.5.5, v1.5.6, v2.0-cyanoptera, v2.0.0]
   workflow_dispatch:
     inputs:
       run_id:
@@ -82,9 +82,9 @@ jobs:
       - name: Create/update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: duckdb-${{ steps.ver.outputs.duckdb_version }}
-          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
-          name: "DuckDB TA-Lib Extension (DuckDB ${{ steps.ver.outputs.duckdb_version }})"
+          tag_name: ${{ steps.ver.outputs.duckdb_version }}
+          target_commitish: ${{ github.event.workflow_run.head_branch || steps.ver.outputs.duckdb_version }}
+          name: ${{ steps.ver.outputs.duckdb_version }}
           body: |
             ## Install (signed — once published to community-extensions)
 
