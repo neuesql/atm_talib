@@ -1,0 +1,99 @@
+# name: test/sql/test_v2_aggregate_batch.test
+# description: Regression test for the DuckDB 2.0 vectorized aggregate-state
+#              Initialize/Finalize API (talib_aggregate.cpp, talib_multi_output_agg.cpp).
+#              Uses many partitions so a single batch initializes/finalizes
+#              dozens of aggregate states at once, instead of one state at a time.
+# group: [sql]
+
+require talib
+
+# ---------- single-output aggregate (talib_aggregate.cpp): ta_sma across 40 partitions ----------
+
+statement ok
+CREATE TABLE many_tickers AS
+SELECT
+    'T' || (g % 40) AS ticker,
+    g AS rn,
+    100.0 + (g % 40) AS close -- flat per ticker: constant across the whole partition
+FROM range(0, 40 * 10) AS t(g);
+
+# First 4 rows of every partition have fewer than 5 values in the frame -> NULL.
+# 40 partitions * 4 rows = 160.
+query I
+SELECT count(*)
+FROM (
+    SELECT ta_sma(close, 5) OVER (
+        PARTITION BY ticker ORDER BY rn
+        ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
+    ) AS sma
+    FROM many_tickers
+) sub
+WHERE sma IS NULL;
+----
+160
+
+# Once the frame is full, SMA of a flat series equals the constant value,
+# independently in every one of the 40 partitions (checked all at once).
+query I
+SELECT count(*)
+FROM (
+    SELECT
+        ta_sma(close, 5) OVER (
+            PARTITION BY ticker ORDER BY rn
+            ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
+        ) AS sma,
+        close
+    FROM many_tickers
+) sub
+WHERE sma IS NOT NULL AND sma != close;
+----
+0
+
+statement ok
+DROP TABLE many_tickers;
+
+# ---------- multi-output aggregate (talib_multi_output_agg.cpp): ta_macd across 40 partitions ----------
+
+statement ok
+CREATE TABLE macd_tickers AS
+SELECT
+    'T' || (g % 40) AS ticker,
+    g AS rn,
+    100.0 + (g % 40) * 5 + (g // 40)::DOUBLE * (0.1 + (g % 40) * 0.02) AS close
+FROM range(0, 40 * 60) AS t(g);
+
+# Every one of the 40 partitions independently reaches a non-NULL macd struct
+# by its last row (batched Finalize must not leave any state uninitialized).
+query I
+SELECT count(*)
+FROM (
+    SELECT m, ticker, rn,
+           row_number() OVER (PARTITION BY ticker ORDER BY rn DESC) AS rev_pos
+    FROM (
+        SELECT ta_macd(close, 12, 26, 9) OVER (PARTITION BY ticker ORDER BY rn) AS m, ticker, rn
+        FROM macd_tickers
+    ) sub
+) t
+WHERE rev_pos = 1 AND m IS NULL;
+----
+0
+
+# The 40 partitions have different slopes, so a correctly batched Finalize
+# must produce more than one distinct macd value at each partition's last row
+# (a cross-partition state mix-up would collapse them to far fewer distinct values).
+query I
+SELECT count(DISTINCT round(m.macd, 6)) > 1
+FROM (
+    SELECT m, ticker, rn,
+           row_number() OVER (PARTITION BY ticker ORDER BY rn DESC) AS rev_pos
+    FROM (
+        SELECT ta_macd(close, 12, 26, 9) OVER (PARTITION BY ticker ORDER BY rn) AS m, ticker, rn
+        FROM macd_tickers
+    ) sub
+) t
+WHERE rev_pos = 1;
+----
+true
+
+statement ok
+DROP TABLE macd_tickers;
