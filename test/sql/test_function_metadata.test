@@ -1,0 +1,94 @@
+# name: test/sql/test_function_metadata.test
+# description: Every t_*/ta_* function is discoverable via duckdb_functions() (neuesql/atm_talib#2)
+# group: [sql]
+
+require talib
+
+# 126 scalar (t_*) functions: 118 from the macro table + 8 multi-output.
+query I
+SELECT count(*)
+FROM duckdb_functions()
+WHERE function_name LIKE 't\_%' ESCAPE '\'
+  AND function_type = 'scalar'
+  AND description IS NOT NULL
+  AND len(examples) > 0;
+----
+126
+
+# 126 aggregate (ta_*) functions, same shape.
+query I
+SELECT count(*)
+FROM duckdb_functions()
+WHERE function_name LIKE 'ta\_%' ESCAPE '\'
+  AND function_type = 'aggregate'
+  AND description IS NOT NULL
+  AND len(examples) > 0;
+----
+126
+
+# Regression test for the actual bug this fixes: duckdb_functions().parameters
+# must be real names (values, period, high, low, ...), never the col0/col1
+# placeholders DuckDB falls back to when a function has no parameter_names.
+query I
+SELECT count(*)
+FROM duckdb_functions(), unnest(parameters) AS p(name)
+WHERE (function_name LIKE 't\_%' ESCAPE '\' OR function_name LIKE 'ta\_%' ESCAPE '\')
+  AND regexp_matches(p.name, '^col[0-9]+$');
+----
+0
+
+# Exact parameter list per distinct pattern shape.
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_sma' AND function_type = 'scalar';
+----
+[values, period]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'ta_sma' AND function_type = 'aggregate';
+----
+[value, period]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_willr' AND function_type = 'scalar';
+----
+[high, low, close, period]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_ad' AND function_type = 'scalar';
+----
+[high, low, close, volume]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_cdldoji' AND function_type = 'scalar';
+----
+[open, high, low, close]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_medprice' AND function_type = 'scalar';
+----
+[high, low]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_midprice' AND function_type = 'scalar';
+----
+[high, low, period]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 't_macd' AND function_type = 'scalar';
+----
+[values, fast_period, slow_period, signal_period]
+
+query I
+SELECT parameters FROM duckdb_functions() WHERE function_name = 'ta_stoch' AND function_type = 'aggregate';
+----
+[high, low, close, fastk_period, slowk_period, slowk_matype, slowd_period, slowd_matype]
+
+# Every category tag includes the shared umbrella tag, plus at least one
+# indicator-specific group (Trend, Momentum, Volatility, ...).
+query I
+SELECT count(*)
+FROM duckdb_functions()
+WHERE (function_name LIKE 't\_%' ESCAPE '\' OR function_name LIKE 'ta\_%' ESCAPE '\')
+  AND (categories IS NULL OR NOT list_contains(categories, 'technical_analysis'));
+----
+0

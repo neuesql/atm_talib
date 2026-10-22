@@ -1,19 +1,21 @@
 #include "duckdb.hpp"
 // DuckDB 2.0 split these helper classes out of vector.hpp into common/vector/*
+#include "duckdb/common/identifier.hpp"
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/list_vector.hpp"
 #include "duckdb/common/vector/struct_vector.hpp"
-#include "duckdb/common/identifier.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
+#include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
+#include "talib_function_desc.hpp"
 
 extern "C" {
 #include "ta_libc.h"
 }
 
-#include <vector>
 #include <new>
+#include <vector>
 
 namespace duckdb {
 
@@ -1227,6 +1229,28 @@ struct TalibAggStoch {
 // ============================================================
 // Registration
 // ============================================================
+// Registers an aggregate function with a FunctionDescription attached:
+// renames its own signature parameters (what actually drives
+// duckdb_functions().parameters on DuckDB 2.0 — see talib_function_desc.hpp),
+// attaches a FunctionDescription, and sets on_conflict to match what the bare
+// RegisterFunction(AggregateFunction) overload does internally.
+static void
+RegisterDescribedAggregate(ExtensionLoader &loader, AggregateFunction func,
+                           std::initializer_list<const char *> param_names,
+                           string description, string example,
+                           string category) {
+  SetParamNames(func, param_names);
+  CreateAggregateFunctionInfo info(func);
+  info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+  FunctionDescription desc;
+  desc.description = std::move(description);
+  desc.parameter_names = vector<string>(param_names.begin(), param_names.end());
+  desc.examples = {std::move(example)};
+  desc.categories = {std::move(category), "technical_analysis"};
+  info.descriptions.push_back(std::move(desc));
+  loader.RegisterFunction(std::move(info));
+}
+
 void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
 
   // ta_minmax: (DOUBLE, INT) -> STRUCT(min, max)
@@ -1239,7 +1263,11 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func), {"value", "time_period"},
+        "Computes the rolling minimum and maximum of the input over the "
+        "given period in a single pass.",
+        "ta_minmax(close, 3)", "Volatility");
   }
 
   // ta_aroon: (DOUBLE, DOUBLE, INT) -> STRUCT(aroon_down, aroon_up)
@@ -1253,7 +1281,11 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func), {"high", "low", "time_period"},
+        "Aroon Indicator: measures the time since the most recent highest "
+        "high and lowest low within the period, as two 0-100 oscillators.",
+        "ta_aroon(high, low, 14)", "Trend");
   }
 
   // ta_ht_phasor: (DOUBLE) -> STRUCT(inphase, quadrature)
@@ -1266,7 +1298,11 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr,
                            nullptr, OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func), {"value"},
+        "Hilbert Transform Phasor Components: the in-phase and quadrature "
+        "components of the dominant price cycle.",
+        "ta_ht_phasor(close)", "Cycle");
   }
 
   // ta_ht_sine: (DOUBLE) -> STRUCT(sine, leadsine)
@@ -1279,7 +1315,11 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr,
                            nullptr, OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func), {"value"},
+        "Hilbert Transform SineWave: the sine and lead sine of the dominant "
+        "cycle's phase angle.",
+        "ta_ht_sine(close)", "Cycle");
   }
 
   // ta_mama: (DOUBLE, DOUBLE, DOUBLE) -> STRUCT(mama, fama)
@@ -1293,7 +1333,12 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func), {"value", "fast_limit", "slow_limit"},
+        "MESA Adaptive Moving Average: an EMA whose smoothing factor adapts "
+        "to the dominant market cycle via the Hilbert Transform, paired with "
+        "a slower following average (FAMA).",
+        "ta_mama(close, 0.5, 0.05)", "Trend");
   }
 
   // ta_macd: (DOUBLE, INT, INT, INT) -> STRUCT(macd, signal, hist)
@@ -1309,7 +1354,13 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
                            OP::Combine, OP::Finalize,
                            FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr,
                            nullptr, OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func),
+        {"value", "fast_period", "slow_period", "signal_period"},
+        "Moving Average Convergence/Divergence: the difference between a "
+        "fast and slow EMA of the input, plus an EMA signal line and the "
+        "histogram of their difference.",
+        "ta_macd(close, 12, 26, 9)", "Trend");
   }
 
   // ta_bbands: (DOUBLE, INT, DOUBLE, DOUBLE, INT) -> STRUCT(upper, middle,
@@ -1326,7 +1377,12 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func),
+        {"value", "time_period", "nb_dev_up", "nb_dev_dn", "ma_type"},
+        "Bollinger Bands: a moving-average midline with upper and lower "
+        "bands offset by a multiple of the rolling standard deviation.",
+        "ta_bbands(close, 20, 2.0, 2.0, 0)", "Volatility");
   }
 
   // ta_stoch: (DOUBLE x3, INT x5) -> STRUCT(slowk, slowd)
@@ -1342,7 +1398,13 @@ void RegisterTalibMultiOutputAggFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,
         OP::Destroy);
-    loader.RegisterFunction(func);
+    RegisterDescribedAggregate(
+        loader, std::move(func),
+        {"high", "low", "close", "fastk_period", "slowk_period", "slowk_matype",
+         "slowd_period", "slowd_matype"},
+        "Stochastic Oscillator: compares the current close to its recent "
+        "high-low range, smoothed into %K and %D lines.",
+        "ta_stoch(high, low, close, 5, 3, 0, 3, 0)", "Momentum");
   }
 }
 
