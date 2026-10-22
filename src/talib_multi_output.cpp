@@ -3,6 +3,8 @@
 
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
+#include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
+#include "talib_function_desc.hpp"
 
 namespace duckdb {
 
@@ -379,74 +381,143 @@ MakeStructList(const vector<pair<string, LogicalType>> &fields) {
   return LogicalType::LIST(LogicalType::STRUCT(children));
 }
 
+// Registers a scalar function with a FunctionDescription attached: renames
+// its own signature parameters (what actually drives
+// duckdb_functions().parameters on DuckDB 2.0 — see talib_function_desc.hpp),
+// attaches a FunctionDescription, and sets on_conflict to match what the bare
+// RegisterFunction(ScalarFunction) overload does internally.
+static void
+RegisterDescribedScalar(ExtensionLoader &loader, ScalarFunction func,
+                        std::initializer_list<const char *> param_names,
+                        string description, string example, string category) {
+  SetParamNames(func, param_names);
+  CreateScalarFunctionInfo info(func);
+  info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+  FunctionDescription desc;
+  desc.description = std::move(description);
+  desc.parameter_names = vector<string>(param_names.begin(), param_names.end());
+  desc.examples = {std::move(example)};
+  desc.categories = {std::move(category), "technical_analysis"};
+  info.descriptions.push_back(std::move(desc));
+  loader.RegisterFunction(std::move(info));
+}
+
 void RegisterTalibMultiOutputFunctions(ExtensionLoader &loader) {
 
   // MACD: (LIST<DOUBLE>, INT, INT, INT) -> LIST<STRUCT(macd, signal, hist)>
-  loader.RegisterFunction(
+  RegisterDescribedScalar(
+      loader,
       ScalarFunction("t_macd",
                      {LIST_DOUBLE, LogicalType::INTEGER, LogicalType::INTEGER,
                       LogicalType::INTEGER},
                      MakeStructList({{"macd", LogicalType::DOUBLE},
                                      {"signal", LogicalType::DOUBLE},
                                      {"hist", LogicalType::DOUBLE}}),
-                     TalibMacdScalar));
+                     TalibMacdScalar),
+      {"values", "fast_period", "slow_period", "signal_period"},
+      "Moving Average Convergence/Divergence: the difference between a fast "
+      "and slow EMA of the input, plus an EMA signal line and the histogram "
+      "of their difference.",
+      "t_macd([1.0, 2.0, 3.0, 4.0, 5.0], 12, 26, 9)", "Trend");
 
   // BBANDS: (LIST<DOUBLE>, INT, DOUBLE, DOUBLE, INT) -> LIST<STRUCT(upper,
   // middle, lower)>
-  loader.RegisterFunction(
+  RegisterDescribedScalar(
+      loader,
       ScalarFunction("t_bbands",
                      {LIST_DOUBLE, LogicalType::INTEGER, LogicalType::DOUBLE,
                       LogicalType::DOUBLE, LogicalType::INTEGER},
                      MakeStructList({{"upper", LogicalType::DOUBLE},
                                      {"middle", LogicalType::DOUBLE},
                                      {"lower", LogicalType::DOUBLE}}),
-                     TalibBbandsScalar));
+                     TalibBbandsScalar),
+      {"values", "time_period", "nb_dev_up", "nb_dev_dn", "ma_type"},
+      "Bollinger Bands: a moving-average midline with upper and lower bands "
+      "offset by a multiple of the rolling standard deviation.",
+      "t_bbands([1.0, 2.0, 3.0, 4.0, 5.0], 20, 2.0, 2.0, 0)", "Volatility");
 
   // STOCH: (LIST<DOUBLE> x3, INT, INT, INT, INT, INT) -> LIST<STRUCT(slowk,
   // slowd)>
-  loader.RegisterFunction(ScalarFunction(
-      "t_stoch",
-      {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER,
-       LogicalType::INTEGER, LogicalType::INTEGER, LogicalType::INTEGER,
-       LogicalType::INTEGER},
-      MakeStructList(
-          {{"slowk", LogicalType::DOUBLE}, {"slowd", LogicalType::DOUBLE}}),
-      TalibStochScalar));
+  RegisterDescribedScalar(
+      loader,
+      ScalarFunction("t_stoch",
+                     {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE,
+                      LogicalType::INTEGER, LogicalType::INTEGER,
+                      LogicalType::INTEGER, LogicalType::INTEGER,
+                      LogicalType::INTEGER},
+                     MakeStructList({{"slowk", LogicalType::DOUBLE},
+                                     {"slowd", LogicalType::DOUBLE}}),
+                     TalibStochScalar),
+      {"high", "low", "close", "fastk_period", "slowk_period", "slowk_matype",
+       "slowd_period", "slowd_matype"},
+      "Stochastic Oscillator: compares the current close to its recent "
+      "high-low range, smoothed into %K and %D lines.",
+      "t_stoch([12.0, 13.0, 14.0], [10.0, 11.0, 12.0], [11.0, 12.0, 13.0], 5, "
+      "3, 0, 3, 0)",
+      "Momentum");
 
   // AROON: (LIST<DOUBLE> x2, INT) -> LIST<STRUCT(aroon_down, aroon_up)>
-  loader.RegisterFunction(ScalarFunction(
-      "t_aroon", {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},
-      MakeStructList({{"aroon_down", LogicalType::DOUBLE},
-                      {"aroon_up", LogicalType::DOUBLE}}),
-      TalibAroonScalar));
+  RegisterDescribedScalar(
+      loader,
+      ScalarFunction("t_aroon",
+                     {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},
+                     MakeStructList({{"aroon_down", LogicalType::DOUBLE},
+                                     {"aroon_up", LogicalType::DOUBLE}}),
+                     TalibAroonScalar),
+      {"high", "low", "time_period"},
+      "Aroon Indicator: measures the time since the most recent highest high "
+      "and lowest low within the period, as two 0-100 oscillators.",
+      "t_aroon([12.0, 13.0, 14.0], [10.0, 11.0, 12.0], 14)", "Trend");
 
   // MINMAX: (LIST<DOUBLE>, INT) -> LIST<STRUCT(min, max)>
-  loader.RegisterFunction(
+  RegisterDescribedScalar(
+      loader,
       ScalarFunction("t_minmax", {LIST_DOUBLE, LogicalType::INTEGER},
                      MakeStructList({{"min", LogicalType::DOUBLE},
                                      {"max", LogicalType::DOUBLE}}),
-                     TalibMinMaxScalar));
+                     TalibMinMaxScalar),
+      {"values", "time_period"},
+      "Computes the rolling minimum and maximum of the input over the given "
+      "period in a single pass.",
+      "t_minmax([1.0, 2.0, 3.0, 4.0, 5.0], 3)", "Volatility");
 
   // MAMA: (LIST<DOUBLE>, DOUBLE, DOUBLE) -> LIST<STRUCT(mama, fama)>
-  loader.RegisterFunction(ScalarFunction(
-      "t_mama", {LIST_DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE},
-      MakeStructList(
-          {{"mama", LogicalType::DOUBLE}, {"fama", LogicalType::DOUBLE}}),
-      TalibMamaScalar));
+  RegisterDescribedScalar(
+      loader,
+      ScalarFunction("t_mama",
+                     {LIST_DOUBLE, LogicalType::DOUBLE, LogicalType::DOUBLE},
+                     MakeStructList({{"mama", LogicalType::DOUBLE},
+                                     {"fama", LogicalType::DOUBLE}}),
+                     TalibMamaScalar),
+      {"values", "fast_limit", "slow_limit"},
+      "MESA Adaptive Moving Average: an EMA whose smoothing factor adapts to "
+      "the dominant market cycle via the Hilbert Transform, paired with a "
+      "slower following average (FAMA).",
+      "t_mama([1.0, 2.0, 3.0, 4.0, 5.0], 0.5, 0.05)", "Trend");
 
   // HT_PHASOR: (LIST<DOUBLE>) -> LIST<STRUCT(inphase, quadrature)>
-  loader.RegisterFunction(
+  RegisterDescribedScalar(
+      loader,
       ScalarFunction("t_ht_phasor", {LIST_DOUBLE},
                      MakeStructList({{"inphase", LogicalType::DOUBLE},
                                      {"quadrature", LogicalType::DOUBLE}}),
-                     TalibHtPhasorScalar));
+                     TalibHtPhasorScalar),
+      {"values"},
+      "Hilbert Transform Phasor Components: the in-phase and quadrature "
+      "components of the dominant price cycle.",
+      "t_ht_phasor([1.0, 2.0, 3.0, 4.0, 5.0])", "Cycle");
 
   // HT_SINE: (LIST<DOUBLE>) -> LIST<STRUCT(sine, leadsine)>
-  loader.RegisterFunction(
+  RegisterDescribedScalar(
+      loader,
       ScalarFunction("t_ht_sine", {LIST_DOUBLE},
                      MakeStructList({{"sine", LogicalType::DOUBLE},
                                      {"leadsine", LogicalType::DOUBLE}}),
-                     TalibHtSineScalar));
+                     TalibHtSineScalar),
+      {"values"},
+      "Hilbert Transform SineWave: the sine and lead sine of the dominant "
+      "cycle's phase angle.",
+      "t_ht_sine([1.0, 2.0, 3.0, 4.0, 5.0])", "Cycle");
 }
 
 } // namespace duckdb

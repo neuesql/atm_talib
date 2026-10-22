@@ -2,15 +2,17 @@
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
+#include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
+#include "talib_function_desc.hpp"
 // flat_vector included via duckdb.hpp
 
 extern "C" {
 #include "ta_libc.h"
 }
 
-#include <vector>
 #include <cstring>
 #include <new>
+#include <vector>
 
 namespace duckdb {
 
@@ -1650,10 +1652,32 @@ struct TalibAggP8 {
 // Registration
 // ============================================================
 
+// Registers an aggregate function with a FunctionDescription attached:
+// renames its own signature parameters (what actually drives
+// duckdb_functions().parameters on DuckDB 2.0 — see talib_function_desc.hpp),
+// attaches a FunctionDescription, and sets on_conflict to match what the bare
+// RegisterFunction(AggregateFunction) overload does internally.
+static void
+RegisterDescribedAggregate(ExtensionLoader &loader, AggregateFunction func,
+                           std::initializer_list<const char *> param_names,
+                           const char *description, string example,
+                           const char *category) {
+  SetParamNames(func, param_names);
+  CreateAggregateFunctionInfo info(func);
+  info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+  FunctionDescription desc;
+  desc.description = description;
+  desc.parameter_names = vector<string>(param_names.begin(), param_names.end());
+  desc.examples = {std::move(example)};
+  desc.categories = {category, "technical_analysis"};
+  info.descriptions.push_back(std::move(desc));
+  loader.RegisterFunction(std::move(info));
+}
+
 void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
 
 // --- P1 DOUBLE: (DOUBLE, INTEGER) -> DOUBLE ---
-#define TALIB_AGG_P1_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P1_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP1Double<ta_func>;                                      \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1662,11 +1686,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func), {"value", "period"},   \
+                               description, "ta_" #sql_name "(close, 3)",      \
+                               category);                                      \
   }
 
 // --- P1 INT: (DOUBLE, INTEGER) -> INTEGER ---
-#define TALIB_AGG_P1_INT(sql_name, ta_func)                                    \
+#define TALIB_AGG_P1_INT(sql_name, ta_func, description, category)             \
   {                                                                            \
     using OP = TalibAggP1Int<ta_func>;                                         \
     AggregateFunction func(                                                    \
@@ -1675,11 +1701,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         OP::Combine, OP::Finalize,                                             \
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,         \
         OP::Destroy);                                                          \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func), {"value", "period"},   \
+                               description, "ta_" #sql_name "(close, 3)",      \
+                               category);                                      \
   }
 
 // --- P2 DOUBLE: (DOUBLE) -> DOUBLE ---
-#define TALIB_AGG_P2_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P2_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP2Double<ta_func>;                                      \
     AggregateFunction func("ta_" #sql_name, {LogicalType::DOUBLE},             \
@@ -1687,11 +1715,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func), {"value"},             \
+                               description, "ta_" #sql_name "(close)",         \
+                               category);                                      \
   }
 
 // --- P2 INT: (DOUBLE) -> INTEGER ---
-#define TALIB_AGG_P2_INT(sql_name, ta_func)                                    \
+#define TALIB_AGG_P2_INT(sql_name, ta_func, description, category)             \
   {                                                                            \
     using OP = TalibAggP2Int<ta_func>;                                         \
     AggregateFunction func(                                                    \
@@ -1699,11 +1729,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         OP::StateSize, OP::Initialize, OP::Update, OP::Combine, OP::Finalize,  \
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,         \
         OP::Destroy);                                                          \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func), {"value"},             \
+                               description, "ta_" #sql_name "(close)",         \
+                               category);                                      \
   }
 
 // --- P3 DOUBLE: (DOUBLE x3, INTEGER) -> DOUBLE ---
-#define TALIB_AGG_P3_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P3_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP3<ta_func>;                                            \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1713,11 +1745,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(                                                \
+        loader, std::move(func), {"high", "low", "close", "period"},           \
+        description, "ta_" #sql_name "(high, low, close, 3)", category);       \
   }
 
 // --- P4 DOUBLE: (DOUBLE x4) -> DOUBLE ---
-#define TALIB_AGG_P4_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P4_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP4<ta_func>;                                            \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1727,11 +1761,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(                                                \
+        loader, std::move(func), {"high", "low", "close", "volume"},           \
+        description, "ta_" #sql_name "(high, low, close, volume)", category);  \
   }
 
 // --- P5 DOUBLE: (DOUBLE x4) -> DOUBLE ---
-#define TALIB_AGG_P5_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P5_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP5Double<ta_func>;                                      \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1741,11 +1777,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(                                                \
+        loader, std::move(func), {"open", "high", "low", "close"},             \
+        description, "ta_" #sql_name "(open, high, low, close)", category);    \
   }
 
 // --- P5 INT: (DOUBLE x4) -> INTEGER ---
-#define TALIB_AGG_P5_INT(sql_name, ta_func)                                    \
+#define TALIB_AGG_P5_INT(sql_name, ta_func, description, category)             \
   {                                                                            \
     using OP = TalibAggP5Int<ta_func>;                                         \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1756,11 +1794,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Finalize,                                       \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(                                                \
+        loader, std::move(func), {"open", "high", "low", "close"},             \
+        description, "ta_" #sql_name "(open, high, low, close)", category);    \
   }
 
 // --- P6 DOUBLE: (DOUBLE x2) -> DOUBLE ---
-#define TALIB_AGG_P6_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P6_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP6<ta_func>;                                            \
     AggregateFunction func("ta_" #sql_name,                                    \
@@ -1769,11 +1809,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
                            OP::Update, OP::Combine, OP::Finalize,              \
                            FunctionNullHandling::DEFAULT_NULL_HANDLING,        \
                            nullptr, nullptr, OP::Destroy);                     \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func), {"high", "low"},       \
+                               description, "ta_" #sql_name "(high, low)",     \
+                               category);                                      \
   }
 
 // --- P7 DOUBLE: (DOUBLE x3) -> DOUBLE ---
-#define TALIB_AGG_P7_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P7_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP7<ta_func>;                                            \
     AggregateFunction func(                                                    \
@@ -1783,11 +1825,13 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         OP::Combine, OP::Finalize,                                             \
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,         \
         OP::Destroy);                                                          \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(                                                \
+        loader, std::move(func), {"high", "low", "close"}, description,        \
+        "ta_" #sql_name "(high, low, close)", category);                       \
   }
 
 // --- P8 DOUBLE: (DOUBLE x2, INTEGER) -> DOUBLE ---
-#define TALIB_AGG_P8_DOUBLE(sql_name, ta_func)                                 \
+#define TALIB_AGG_P8_DOUBLE(sql_name, ta_func, description, category)          \
   {                                                                            \
     using OP = TalibAggP8<ta_func>;                                            \
     AggregateFunction func(                                                    \
@@ -1797,12 +1841,15 @@ void RegisterTalibAggregateFunctions(ExtensionLoader &loader) {
         OP::Combine, OP::Finalize,                                             \
         FunctionNullHandling::DEFAULT_NULL_HANDLING, nullptr, nullptr,         \
         OP::Destroy);                                                          \
-    loader.RegisterFunction(func);                                             \
+    RegisterDescribedAggregate(loader, std::move(func),                        \
+                               {"high", "low", "period"}, description,         \
+                               "ta_" #sql_name "(high, low, 3)", category);    \
   }
 
 // Dispatch macro
-#define TALIB_FUNC(sql_name, ta_func, ta_lookback, pattern, ret_type)          \
-  TALIB_AGG_##pattern##_##ret_type(sql_name, ta_func)
+#define TALIB_FUNC(sql_name, ta_func, ta_lookback, pattern, ret_type,          \
+                   description, category)                                      \
+  TALIB_AGG_##pattern##_##ret_type(sql_name, ta_func, description, category)
 
 #include "talib_functions.hpp"
 

@@ -2,6 +2,8 @@
 // list_vector included via duckdb.hpp
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/main/extension/extension_loader.hpp"
+#include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
+#include "talib_function_desc.hpp"
 
 namespace duckdb {
 
@@ -382,77 +384,147 @@ static void TalibScalarP8(DataChunk &args, ExpressionState &state,
 static const auto LIST_DOUBLE = LogicalType::LIST(LogicalType::DOUBLE);
 static const auto LIST_INT = LogicalType::LIST(LogicalType::INTEGER);
 
+// Builds and registers a describable ScalarFunction: renames its own
+// signature parameters (what actually drives duckdb_functions().parameters
+// on DuckDB 2.0 — see talib_function_desc.hpp), attaches a
+// FunctionDescription, and sets on_conflict to match what the bare
+// RegisterFunction(ScalarFunction) overload does internally.
+static void
+RegisterDescribedScalar(ExtensionLoader &loader, ScalarFunction func,
+                        std::initializer_list<const char *> param_names,
+                        const char *description, string example,
+                        const char *category) {
+  SetParamNames(func, param_names);
+  CreateScalarFunctionInfo info(func);
+  info.on_conflict = OnCreateConflict::ALTER_ON_CONFLICT;
+  FunctionDescription desc;
+  desc.description = description;
+  desc.parameter_names = vector<string>(param_names.begin(), param_names.end());
+  desc.examples = {std::move(example)};
+  desc.categories = {category, "technical_analysis"};
+  info.descriptions.push_back(std::move(desc));
+  loader.RegisterFunction(std::move(info));
+}
+
 void RegisterTalibScalarFunctions(ExtensionLoader &loader) {
 
 // --- P1 DOUBLE: (LIST<DOUBLE>, INTEGER) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P1_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(                                                     \
+#define TALIB_SCALAR_P1_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
       ScalarFunction("t_" #sql_name, {LIST_DOUBLE, LogicalType::INTEGER},      \
-                     LIST_DOUBLE, TalibScalarP1Double<ta_func>));
+                     LIST_DOUBLE, TalibScalarP1Double<ta_func>),               \
+      {"values", "period"}, description,                                       \
+      "t_" #sql_name "([1.0, 2.0, 3.0, 4.0, 5.0], 3)", category);
 
 // --- P1 INT: (LIST<DOUBLE>, INTEGER) -> LIST<INTEGER> ---
-#define TALIB_SCALAR_P1_INT(sql_name, ta_func)                                 \
-  loader.RegisterFunction(                                                     \
+#define TALIB_SCALAR_P1_INT(sql_name, ta_func, description, category)          \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
       ScalarFunction("t_" #sql_name, {LIST_DOUBLE, LogicalType::INTEGER},      \
-                     LIST_INT, TalibScalarP1Int<ta_func>));
+                     LIST_INT, TalibScalarP1Int<ta_func>),                     \
+      {"values", "period"}, description,                                       \
+      "t_" #sql_name "([1.0, 2.0, 3.0, 4.0, 5.0], 3)", category);
 
 // --- P2 DOUBLE: (LIST<DOUBLE>) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P2_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(ScalarFunction("t_" #sql_name, {LIST_DOUBLE},        \
-                                         LIST_DOUBLE,                          \
-                                         TalibScalarP2Double<ta_func>));
+#define TALIB_SCALAR_P2_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction("t_" #sql_name, {LIST_DOUBLE}, LIST_DOUBLE,               \
+                     TalibScalarP2Double<ta_func>),                            \
+      {"values"}, description, "t_" #sql_name "([1.0, 2.0, 3.0, 4.0, 5.0])",   \
+      category);
 
 // --- P2 INT: (LIST<DOUBLE>) -> LIST<INTEGER> ---
-#define TALIB_SCALAR_P2_INT(sql_name, ta_func)                                 \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name, {LIST_DOUBLE}, LIST_INT, TalibScalarP2Int<ta_func>));
+#define TALIB_SCALAR_P2_INT(sql_name, ta_func, description, category)          \
+  RegisterDescribedScalar(loader,                                              \
+                          ScalarFunction("t_" #sql_name, {LIST_DOUBLE},        \
+                                         LIST_INT, TalibScalarP2Int<ta_func>), \
+                          {"values"}, description,                             \
+                          "t_" #sql_name "([1.0, 2.0, 3.0, 4.0, 5.0])",        \
+                          category);
 
 // --- P3 DOUBLE: (LIST<DOUBLE> x3, INTEGER) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P3_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name,                                                          \
-      {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},           \
-      LIST_DOUBLE, TalibScalarP3<ta_func>));
+#define TALIB_SCALAR_P3_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction(                                                          \
+          "t_" #sql_name,                                                      \
+          {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},       \
+          LIST_DOUBLE, TalibScalarP3<ta_func>),                                \
+      {"high", "low", "close", "period"}, description,                         \
+      "t_" #sql_name                                                           \
+      "([12.0, 13.0, 14.0], [10.0, 11.0, 12.0], [11.0, 12.0, 13.0], 3)",       \
+      category);
 
 // --- P4 DOUBLE: (LIST<DOUBLE> x4) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P4_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},    \
-      LIST_DOUBLE, TalibScalarP4<ta_func>));
+#define TALIB_SCALAR_P4_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction("t_" #sql_name,                                           \
+                     {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},     \
+                     LIST_DOUBLE, TalibScalarP4<ta_func>),                     \
+      {"high", "low", "close", "volume"}, description,                         \
+      "t_" #sql_name                                                           \
+      "([12.0, 13.0], [10.0, 11.0], [11.0, 12.0], [1000.0, 1200.0])",          \
+      category);
 
 // --- P5 DOUBLE: (LIST<DOUBLE> x4) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P5_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},    \
-      LIST_DOUBLE, TalibScalarP5Double<ta_func>));
+#define TALIB_SCALAR_P5_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction("t_" #sql_name,                                           \
+                     {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},     \
+                     LIST_DOUBLE, TalibScalarP5Double<ta_func>),               \
+      {"open", "high", "low", "close"}, description,                           \
+      "t_" #sql_name                                                           \
+      "([10.0, 11.0], [12.0, 13.0], [9.0, 10.0], [11.0, 12.0])",               \
+      category);
 
 // --- P5 INT: (LIST<DOUBLE> x4) -> LIST<INTEGER> ---
-#define TALIB_SCALAR_P5_INT(sql_name, ta_func)                                 \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},    \
-      LIST_INT, TalibScalarP5Int<ta_func>));
+#define TALIB_SCALAR_P5_INT(sql_name, ta_func, description, category)          \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction("t_" #sql_name,                                           \
+                     {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},     \
+                     LIST_INT, TalibScalarP5Int<ta_func>),                     \
+      {"open", "high", "low", "close"}, description,                           \
+      "t_" #sql_name                                                           \
+      "([10.0, 11.0], [12.0, 13.0], [9.0, 10.0], [11.0, 12.0])",               \
+      category);
 
 // --- P6 DOUBLE: (LIST<DOUBLE> x2) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P6_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(                                                     \
+#define TALIB_SCALAR_P6_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
       ScalarFunction("t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE}, LIST_DOUBLE,  \
-                     TalibScalarP6<ta_func>));
+                     TalibScalarP6<ta_func>),                                  \
+      {"high", "low"}, description,                                            \
+      "t_" #sql_name "([12.0, 13.0], [10.0, 11.0])", category);
 
 // --- P7 DOUBLE: (LIST<DOUBLE> x3) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P7_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(                                                     \
+#define TALIB_SCALAR_P7_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
       ScalarFunction("t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE, LIST_DOUBLE},  \
-                     LIST_DOUBLE, TalibScalarP7<ta_func>));
+                     LIST_DOUBLE, TalibScalarP7<ta_func>),                     \
+      {"high", "low", "close"}, description,                                   \
+      "t_" #sql_name "([12.0, 13.0], [10.0, 11.0], [11.0, 12.0])", category);
 
 // --- P8 DOUBLE: (LIST<DOUBLE> x2, INTEGER) -> LIST<DOUBLE> ---
-#define TALIB_SCALAR_P8_DOUBLE(sql_name, ta_func)                              \
-  loader.RegisterFunction(ScalarFunction(                                      \
-      "t_" #sql_name, {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},        \
-      LIST_DOUBLE, TalibScalarP8<ta_func>));
+#define TALIB_SCALAR_P8_DOUBLE(sql_name, ta_func, description, category)       \
+  RegisterDescribedScalar(                                                     \
+      loader,                                                                  \
+      ScalarFunction("t_" #sql_name,                                           \
+                     {LIST_DOUBLE, LIST_DOUBLE, LogicalType::INTEGER},         \
+                     LIST_DOUBLE, TalibScalarP8<ta_func>),                     \
+      {"high", "low", "period"}, description,                                  \
+      "t_" #sql_name "([12.0, 13.0, 14.0], [10.0, 11.0, 12.0], 3)", category);
 
 // Dispatch macro: TALIB_FUNC -> TALIB_SCALAR_<pattern>_<ret_type>
-#define TALIB_FUNC(sql_name, ta_func, ta_lookback, pattern, ret_type)          \
-  TALIB_SCALAR_##pattern##_##ret_type(sql_name, ta_func)
+#define TALIB_FUNC(sql_name, ta_func, ta_lookback, pattern, ret_type,          \
+                   description, category)                                      \
+  TALIB_SCALAR_##pattern##_##ret_type(sql_name, ta_func, description, category)
 
 #include "talib_functions.hpp"
 
