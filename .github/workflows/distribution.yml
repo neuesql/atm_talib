@@ -2,9 +2,9 @@ name: Build & Test (Distribution)
 
 on:
   push:
-    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5, v1.5.6, v2.0-cyanoptera, v2.0.0]
+    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5, v1.5.6, v2.0.0]
   pull_request:
-    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5, v1.5.6, v2.0-cyanoptera, v2.0.0]
+    branches: [main, v1.5.2, v1.5.3, v1.5.4, v1.5.5, v1.5.6, v2.0.0]
   workflow_dispatch:
     inputs:
       duckdb_version:
@@ -28,7 +28,7 @@ jobs:
       duckdb_version: ${{ inputs.duckdb_version || vars.DUCKDB_VERSION || 'v2.0.0' }}
       ci_tools_version: ${{ inputs.ci_tools_version || vars.CI_TOOLS_VERSION || 'v2.0-cyanoptera' }}
       extension_name: talib
-      exclude_archs: windows_amd64;windows_amd64_mingw;windows_amd64_rtools
+      exclude_archs: windows_amd64_mingw;windows_amd64_rtools
       opt_in_archs: windows_arm64
 
   code-quality:
