@@ -148,7 +148,7 @@ SELECT t_aroon(list(high ORDER BY date), list(low ORDER BY date), 14) FROM ohlc;
 |----------|--------------|
 | 🐧 Linux | x86_64, aarch64 |
 | 🍎 macOS | x86_64, arm64 |
-| 🪟 Windows | arm64 |
+| 🪟 Windows | x86_64, arm64 |
 | 🌐 WebAssembly | wasm_mvp, wasm_eh, wasm_threads |
 
 ---

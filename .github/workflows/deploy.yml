@@ -104,7 +104,7 @@ jobs:
             ## Platforms
             - Linux x86_64 (`linux_amd64`), Linux ARM64 (`linux_arm64`)
             - macOS x86_64 (`osx_amd64`), macOS ARM64 (`osx_arm64`)
-            - Windows ARM64 (`windows_arm64`)
+            - Windows x86_64 (`windows_amd64`), Windows ARM64 (`windows_arm64`)
             - WebAssembly (`wasm_mvp`, `wasm_eh`, `wasm_threads`)
           files: release_assets/*
           make_latest: ${{ steps.ver.outputs.duckdb_version == vars.LATEST_DUCKDB_VERSION }}
