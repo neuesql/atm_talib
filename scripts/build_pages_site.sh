@@ -5,7 +5,9 @@
 #
 # Reads <artifacts_dir>/<ext>-*extension-<arch>/*.duckdb_extension and writes
 # <out_dir>/<duckdb_version>/<arch>/<ext>.duckdb_extension.gz (gzip -9), which is
-# the layout `INSTALL <ext> FROM '<repo-url>'` expects.
+# the layout `INSTALL <ext> FROM '<repo-url>'` expects. WASM artifacts
+# (*.duckdb_extension.wasm) are copied as-is, uncompressed, since that's the
+# filename DuckDB-Wasm's loader fetches directly.
 set -euo pipefail
 
 artifacts_dir="${1:?artifacts_dir required}"
@@ -17,6 +19,12 @@ found=0
 for dir in "$artifacts_dir"/${ext}-*; do
   [ -d "$dir" ] || continue
   arch="${dir##*extension-}"          # ".../talib-...extension-linux_amd64" -> "linux_amd64"
+  for f in "$dir"/*.duckdb_extension.wasm; do
+    [ -f "$f" ] || continue
+    mkdir -p "$out_dir/$version/$arch"
+    cp "$f" "$out_dir/$version/$arch/$ext.duckdb_extension.wasm"
+    found=$((found + 1))
+  done
   for f in "$dir"/*.duckdb_extension; do
     [ -f "$f" ] || continue
     mkdir -p "$out_dir/$version/$arch"
